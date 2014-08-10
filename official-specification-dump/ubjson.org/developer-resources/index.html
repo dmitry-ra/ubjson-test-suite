@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8" />
+<title>Developer Resources | Universal Binary JSON Specification</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="pingback" href="../xmlrpc.php" />
+<link rel="alternate" type="application/rss+xml" title="Universal Binary JSON Specification &raquo; Feed" href="http://ubjson.org/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Universal Binary JSON Specification &raquo; Comments Feed" href="http://ubjson.org/comments/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Universal Binary JSON Specification &raquo; Developer Resources Comments Feed" href="feed/index.html" />
+<link rel='stylesheet' id='wp-syntax-css-css'  href='../wp-content/plugins/wp-syntax/css/wp-syntax.css%3Fver=1.0.css' type='text/css' media='all' />
+<link rel='stylesheet' id='theme-stylesheet-css'  href='../wp-content/themes/canvas-child/style.css%3Fver=5.1.1.css' type='text/css' media='all' />
+<link rel='stylesheet' id='woo-layout-css'  href='../wp-content/themes/canvas/css/layout.css%3Fver=3.8.1.css' type='text/css' media='all' />
+<script type='text/javascript' src='../wp-includes/js/comment-reply.min.js%3Fver=3.8.1'></script>
+<script type='text/javascript' src='../wp-includes/js/jquery/jquery.js%3Fver=1.10.2'></script>
+<script type='text/javascript' src='../wp-includes/js/jquery/jquery-migrate.min.js%3Fver=1.2.1'></script>
+<script type='text/javascript' src='../wp-content/themes/canvas/includes/js/third-party.js%3Fver=3.8.1'></script>
+<script type='text/javascript' src='../wp-content/themes/canvas/includes/js/jquery.flexslider.min.js%3Fver=3.8.1'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var woo_localized_data = {"select_a_page":"Select a page:"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='../wp-content/themes/canvas/includes/js/general.js%3Fver=3.8.1'></script>
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="../xmlrpc.php%3Frsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="../wp-includes/wlwmanifest.xml" /> 
+<link rel='prev' title='Thanks' href='../thanks/index.html' />
+<link rel='next' title='Value Types' href='../type-reference/value-types/index.html' />
+<link rel='canonical' href='index.html' />
+<link rel='shortlink' href='index.html' />
+
+<!-- Theme version -->
+<meta name="generator" content="Canvas - Child 0.1.0" />
+<meta name="generator" content="Canvas 5.1.6" />
+<meta name="generator" content="WooFramework 5.5.5" />
+
+<!-- Custom CSS Styling -->
+<style type="text/css">
+#logo .site-title, #logo .site-description { display:block!important; }
+body {background-repeat:no-repeat;background-position:top left;background-attachment:scroll;border-top:4px solid #000000;}
+#header {background-repeat:no-repeat;background-position:top center;margin-top:0px;margin-bottom:0px;padding-top:40px;padding-bottom:30px;border:0px solid ;}
+#logo .site-title a {font:normal 40px/1em 'Oswald', arial, sans-serif;color:#222222;}
+#logo .site-description {font:italic 14px/1em 'PT Serif', arial, sans-serif;color:#999999;}
+body, p { font:normal 14px/1.5em Arial, sans-serif;color:#555555; }
+h1 { font:bold 28px/1.2em Verdana, Geneva, sans-serif;color:#222222; }h2 { font:normal 24px/1.2em Verdana, Geneva, sans-serif;color:#222222; }h3 { font:normal 20px/1.2em Verdana, Geneva, sans-serif;color:#222222; }h4 { font:normal 16px/1.2em Verdana, Geneva, sans-serif;color:#222222; }h5 { font:normal 14px/1.2em Verdana, Geneva, sans-serif;color:#222222; }h6 { font:normal 12px/1.2em Verdana, Geneva, sans-serif;color:#222222; }
+.post .title, .page .title, .post .title a:link, .post .title a:visited, .page .title a:link, .page .title a:visited {font:normal 24px/1.1em 'PT Serif', arial, sans-serif;color:#222222;}
+.post-meta { font:normal 11px/1.5em 'PT Serif', arial, sans-serif;color:#868686; }
+.entry, .entry p{ font:normal 14px/1.5em "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", sans-serif;color:#555555; }
+.post-more {font:normal 12px/1.5em Arial, sans-serif;color:#868686;border-top:4px solid #e6e6e6;border-bottom:1px solid #e6e6e6;}
+#post-author, #connect {border-top:1px solid #e6e6e6;border-bottom:4px solid #e6e6e6;border-left:1px solid #e6e6e6;border-right:1px solid #e6e6e6;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;background-color:#fafafa}
+.nav-entries, .woo-pagination {border-top:1px solid #e6e6e6;border-bottom:4px solid #e6e6e6; padding: 12px 0px; }
+.nav-entries a, .woo-pagination { font:italic 12px/1em 'PT Serif', arial, sans-serif;color:#777777; }
+.woo-pagination a, .woo-pagination a:hover {color:#777777!important}
+.widget h3 {font:bold 14px/1.2em PT Serif;color:#555555;border-bottom:3px solid #e6e6e6;}
+.widget_recent_comments li, #twitter li { border-color: #e6e6e6;}
+.widget p, .widget .textwidget { font:normal 12px/1.5em Arial, sans-serif;color:#555555; }
+.widget {font:normal 12px/1.5em Arial, sans-serif;color:#555555;border-radius:0px;-moz-border-radius:0px;-webkit-border-radius:0px;}
+#tabs .inside li a, .widget_woodojo_tabs .tabbable .tab-pane li a { font:bold 12px/1.5em 'PT Serif', arial, sans-serif;color:#555555; }
+#tabs .inside li span.meta, .widget_woodojo_tabs .tabbable .tab-pane li span.meta { font:normal 11px/1.5em "Trebuchet MS", Tahoma, sans-serif;color:#777777; }
+#tabs ul.wooTabs li a, .widget_woodojo_tabs .tabbable .nav-tabs li a { font:normal 11px/2em "Trebuchet MS", Tahoma, sans-serif;color:#777777; }
+ul.nav li a, #navigation ul.rss a { font:normal 14px/1em Arial, sans-serif;color:#555555; }
+#navigation ul.nav li ul  { border: 1px solid #dbdbdb; }
+#navigation ul.nav > li  { border-right: 1px solid #dbdbdb; }#navigation ul li:first-child, #navigation ul li:first-child a { border-radius:0px 0 0 0px; -moz-border-radius:0px 0 0 0px; -webkit-border-radius:0px 0 0 0px; }
+#navigation {border-top:1px solid #dbdbdb;border-bottom:4px solid #dbdbdb;border-left:0px solid #dbdbdb;border-right:0px solid #dbdbdb;border-radius:0px; -moz-border-radius:0px; -webkit-border-radius:0px;}
+#top ul.nav li a { font:normal 14px/1.6em Arial, sans-serif;color:#ddd; }
+#footer, #footer p { font:italic 14px/1em 'PT Serif', arial, sans-serif;color:#777777; }
+#footer {border-top:4px solid #dbdbdb;border-bottom:0px solid ;border-left:0px solid ;border-right:0px solid ;border-radius:0px; -moz-border-radius:0px; -webkit-border-radius:0px;}
+.magazine #loopedSlider .content h2.title a { font:bold 24px/1em Arial, sans-serif;color:#ffffff; }
+.magazine #loopedSlider .content .excerpt p { font:normal 12px/1.5em Arial, sans-serif;color:#cccccc; }
+.business #loopedSlider .content h2 { font:bold 24px/1em Arial, sans-serif;color:#ffffff; }
+.business #loopedSlider .content h2.title a { font:bold 24px/1em Arial, sans-serif;color:#ffffff; }
+#wrapper .business #loopedSlider .content p { font:normal 12px/1.5em Arial, sans-serif;color:#cccccc; }
+.archive_header h1 { font:normal 18px/1em Arial, sans-serif;color:#555555; }
+.archive_header {border-bottom:5px solid #e6e6e6;}
+</style>
+
+<!-- Google Webfonts -->
+<link href="http://fonts.googleapis.com/css?family=Oswald:400,300,700|PT+Serif:r,b,i,bi" rel="stylesheet" type="text/css" />
+
+<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame -->
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+<!--  Mobile viewport scale -->
+<meta content="initial-scale=1.0; maximum-scale=1.0; user-scalable=yes" name="viewport"/>
+
+<!-- Adjust the website width -->
+<style type="text/css">
+	.col-full, #wrapper { max-width: 760px !important; }
+</style>
+
+<!--[if lt IE 9]>
+<link href="http://ubjson.org/wp-content/themes/canvas/css/non-responsive.css" rel="stylesheet" type="text/css" />
+<style type="text/css">
+.col-full, #wrapper { width: 760px; max-width: 760px; }
+</style>
+<![endif]-->
+<style type="text/css">.broken_link, a.broken_link {
+	text-decoration: line-through;
+}</style>
+<!-- Custom Favicon -->
+<link rel="shortcut icon" href="../wp-content/uploads/2011/09/favicon.png"/>
+<!-- Options Panel Custom CSS -->
+<style type="text/css">
+#main h1 {
+  padding-top: 2em;
+}
+
+#main h2 {
+  padding-top: 0.5em;
+}
+
+#main hr {
+  height: 3px;
+  background-color: #444444;
+}
+
+#main p {
+  text-align: justify;
+}
+
+#type-ref-table {
+  font-size: 9pt;
+  font-family: Courier New, monospaced;
+  border: 1px solid #EDEDED;
+}
+
+#type-ref-table thead tr {
+  color: #FFFFFF;
+  background-color: #444444;
+  font-weight: bold;
+}
+
+#type-ref-table tbody tr {
+  border-bottom: 1px solid #EDEDED;
+}
+
+#type-ref-table td {
+  padding: 0.4em;
+  border-right: 1px solid #EDEDED;
+}
+</style>
+
+
+<!-- Woo Shortcodes CSS -->
+<link href="../wp-content/themes/canvas/functions/css/shortcodes.css" rel="stylesheet" type="text/css" />
+
+<!-- Custom Stylesheet -->
+<link href="../wp-content/themes/canvas/custom.css" rel="stylesheet" type="text/css" />
+</head>
+<body class="page page-id-299 page-template-default unknown alt-style-default one-col width-760 one-col-760">
+<div id="wrapper">        
+	    
+	<div id="header" class="col-full">
+ 		
+		       
+		<div id="logo">
+		<span class="site-title"><a href="../index.html">Universal Binary JSON Specification</a></span>
+<span class="site-description">The universally compatible format specification for binary JSON.</span>
+		</div><!-- /#logo -->
+	      
+	    <h3 class="nav-toggle icon"><a href="index.html#navigation">Navigation</a></h3>
+	      
+		       
+	</div><!-- /#header -->
+	<div id="navigation" class="col-full">
+		<ul id="main-nav" class="nav fl"><li id="menu-item-23" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-23"><a href="../index.html">Specification</a></li>
+<li id="menu-item-61" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-61"><a href="../type-reference/index.html">Type Reference</a>
+<ul class="sub-menu">
+	<li id="menu-item-427" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-427"><a href="../type-reference/value-types/index.html">Value Types</a></li>
+	<li id="menu-item-472" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-472"><a href="../type-reference/container-types/index.html">Container Types</a></li>
+	<li id="menu-item-618" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-618"><a href="../type-reference/binary-data/index.html">Binary Data</a></li>
+</ul>
+</li>
+<li id="menu-item-50" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-50"><a href="../libraries/index.html">Libraries</a></li>
+<li id="menu-item-301" class="menu-item menu-item-type-post_type menu-item-object-page current-menu-item page_item page-item-299 current_page_item menu-item-301"><a href="index.html">Developer Resources</a></li>
+<li id="menu-item-24" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-24"><a href="../contact/index.html">Contact</a></li>
+<li id="menu-item-162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-162"><a href="../thanks/index.html">Thanks</a></li>
+</ul>	
+</div><!-- /#navigation -->
+       
+    <!-- #content Starts -->
+	    <div id="content" class="col-full">
+    
+    	<div id="main-sidebar-container">    
+
+            <!-- #main Starts -->
+                        <div id="main">                     
+<div class="post-299 page type-page status-publish hentry">
+<h1 class="title">Developer Resources</h1>	<div class="entry">
+	    <p>This page contains information for developers looking to develop a Universal Binary JSON library.</p>
+<ul>
+<li><a href="index.html#library_req">Library Implementation Requirements</a></li>
+<li><a href="index.html#best_practice">Best Practices</a></li>
+<li><a href="index.html#example_files">Example Files</a></li>
+</ul>
+<h1><a name="library_req"></a>Library Implementation Requirements</h1>
+<p>Libraries implementing the Universal Binary JSON spec must adhere to the following guidelines:</p>
+<ul>
+<li>Parsers must follow a &#8220;writer-makes-right&#8221; policy &#8211; more specifically, if a parser encounters unexpected or invalid data (e.g. negative container length value) an exception should be thrown and parsing stopped.</li>
+</ul>
+<h1><a name="best_practice"></a>Best Practices</h1>
+<ul>
+<li><a href="index.html#best_container_perf">Optimizing Container Performance</a></li>
+<li><a href="index.html#best_smallest_num">Using Smallest Number Representation</a></li>
+<li><a href="index.html#best_high_prec_num">Handling High-Precision Numbers on Unsupported Platforms</a></li>
+</ul>
+<p>Through work with the community, feedback from others and our own experience with the specification, below are some of the best-practices collected into one place making it easy for folks working with the format to find answers to the more flexible portions of the spec.</p>
+<h2><a name="best_container_perf"></a>Optimizing Container Performance</h2>
+<div class="woo-sc-box tick   "><strong>Why:</strong> (Potentially large) data size reduction and parsing performance increase.<br />
+<strong>How</strong>: Homogeneous data type in a container.</div>
+<p>Very large performance advantages are available when writing out <em>ARRAY</em> or <em>OBJECT</em> containers that contain same-type values. Be sure to read through the <a href="../type-reference/container-types/index.html#optimized-format"><em>optimized container format</em></a> that can be leveraged in these cases.</p>
+<p>A typical level of optimization is being able to omit all the marker characters for all same-typed values in a container, making the sizes of all typical <a href="../type-reference/index.html"><em>value types</em></a> 1-byte smaller.</p>
+<p>An a-typical level of optimization, that leads to the biggest reduction, is for all <a href="../type-reference/index.html">1-byte value types</a> (e.g. <em>NO-OP</em>, <em>NULL</em>, etc); when used in conjunction with the <a href="../type-reference/container-types/index.html#optimized-format"><em>optimized container format</em>,</a> the values themselves can be omitted from the container entirely leading to a space savings that approaches 100% as the size of the container grows.</p>
+<h2><a name="best_smallest_num"></a>Using Smallest Number Representation</h2>
+<div class="woo-sc-box tick   "><strong>Why:</strong> <a href="../index.html#size">~50% size reduction</a> for numbers &gt; 5 digits and &lt; 20 digits.<br />
+<strong>How</strong>: Always use the most compact numeric type possible when writing UBJSON.</div>
+<p>Numeric values can be represented in <a href="../type-reference/value-types/index.html#numeric">a number of ways</a> in UBJSON; you can reduce the size of your UBJSON by inspecting the stored value and ensuring it is represented in the most-compact numeric representation possible when storing the UBJSON blob.</p>
+<p>Keep in mind that varying the type of values inside of a container may impact your ability to use the <strong>type</strong> parameter to <a href="../type-reference/container-types/index.html#optimized-format">optimize container storage</a>.</p>
+<h2><a name="best_high_prec_num"></a>Handling High-Precision Numbers on Unsupported Platforms</h2>
+<div class="woo-sc-box tick   "><strong>Why:</strong> Cleanly handle &gt; 64-bit numbers on platforms that don&#8217;t support them.<br />
+<strong>How</strong>: By using the <em><a href="../type-reference/value-types/index.html#numeric-gt-64bit">high-precision</a></em> type.</div>
+<p>Not every language supports arbitrarily long numbers and some not even numbers greater than 64-bits in size. In order to safely allow the transport and handling of &gt; 64-bit numbers across every platform, UBJSON provides the <em>high-precision</em> numeric type.</p>
+<p>The <em>high-precision</em> type is a string-based type (identical in format to the <a href="../type-reference/value-types/index.html#string"><em>string</em></a> type) that provides a universally compatible mechanism by which arbitrarily large or precise numbers can be handled.</p>
+<p>For platforms with arbitrarily large/precise number support, they are free to parse the <em>high-precision</em> value into a native type; for platforms without support, the <em>high-precision</em> value can be safely passed on, persisted to storage or handled in other non-numeric ways while still allowing the client to handle the request and not overflow or otherwise balk at the unsupported numeric type.</p>
+<p>That said, for libraries written to support platforms that do not natively support arbitrarily large or precise values, the following guidance can be employed to provide a safe and consistent behavior when encountering them:</p>
+<ol>
+<li><strong>[Default] <span style="color: #0000ff;">Exception/Error</span>: </strong>Throw an exception(or return an error) when an unsupported <em>high-precision </em>value is encountered during parsing. The platform doesn&#8217;t support them so allow the client a chance to be aware of the fact that it is receiving data it won&#8217;t know how to parse into a native type.</li>
+<li><strong>[Optional] <span style="color: #0000ff;">Handle as a String</span>:</strong> (<span style="text-decoration: underline;">must be user-enabled</span>) In the case where the client doesn&#8217;t need to do any processing of the value and is just doing pass-through like persisting it to a data store, treat the <em>high-precision</em> value as a <em>string</em> and return it to the caller.</li>
+<li><strong>[Optional] <span style="color: #0000ff;">Skip</span></strong>: (<span style="text-decoration: underline;">must be user-enabled</span>) Provide the ability for the parser to optionally skip unsupported values during parsing. Be aware that this is a dangerous approach and <span style="color: #ff0000;"><strong>will likely lead to data loss</strong></span> (skipped values won&#8217;t be visible to the client), but in the case where a client <em>must</em> be able to parse any and all UBJSON it received even if it doesn&#8217;t support arbitrarily large or precise numbers, then this has to be considered.</li>
+</ol>
+<p>These guidelines should provide the most functional experience for a client to work with UBJSON on their platform of choice.</p>
+<h1><a name="example_files"></a>Example Files</h1>
+<div class="woo-sc-box alert   ">Example files below only support Draft 8</div>
+<p>You can find files to test your implementation with <a href="https://github.com/thebuzzmedia/universal-binary-json-java/tree/master/src/test/resources/org/ubjson">here</a>. There are <em>formatted-json</em>, <em>compacted-json</em> and <em>UBJ</em> versions of each of the testing files contained in the repository.</p>
+<p>The simple Java classes that have matching names to the UBJ files are Java class representations of the files (for Java testing) and the <em>Marshaller</em> classes are the hand-coded serialization and deserialization code used to write out and read in those test files from UBJ format.</p>
+<p>Even if you are not working in Java, you can use those classes as a high level guide if you are curious or ignore them completely and just test against the raw file resources.</p>
+	</div><!-- /.entry -->
+	<div class="fix"></div>
+</div><!-- /.post -->
+     
+            </div><!-- /#main -->
+                
+            
+		</div><!-- /#main-sidebar-container -->         
+
+		
+    </div><!-- /#content -->
+	
+	<div id="footer" class="col-full">
+	
+		    
+	    
+		<div id="copyright" class="col-left">
+			<p><p>&copy; 2013 The Buzz Media, LLC</p></p>		</div>
+		
+		<div id="credit" class="col-right">
+			<p><p></p></p>		</div>
+		
+	</div><!-- /#footer  -->
+	
+	    
+	
+	</div><!-- /#wrapper -->
+	
+	<div class="fix"></div><!--/.fix-->
+	
+	<script type="text/javascript">
+var clicky_site_ids = clicky_site_ids || [];
+clicky_site_ids.push(66482614);
+(function() {
+  var s = document.createElement('script');
+  s.type = 'text/javascript';
+  s.async = true;
+  s.src = '//static.getclicky.com/js';
+  ( document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0] ).appendChild( s );
+})();
+</script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var wooFeedbackL10n = {"nextButton":"Next \u2192","prevButton":"\u2190 Previous"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='../wp-content/themes/canvas/includes/js/feedback.js%3Fver=5.0.7'></script>
+		</body>
+</html>
+<!-- Dynamic page generated in 0.238 seconds. -->
+<!-- Cached page generated by WP-Super-Cache on 2014-08-10 14:44:04 -->

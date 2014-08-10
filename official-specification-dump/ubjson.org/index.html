@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8" />
+<title>Universal Binary JSON Specification</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="pingback" href="xmlrpc.php" />
+<link rel="alternate" type="application/rss+xml" title="Universal Binary JSON Specification &raquo; Feed" href="http://ubjson.org/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Universal Binary JSON Specification &raquo; Comments Feed" href="http://ubjson.org/comments/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Universal Binary JSON Specification &raquo; Specification Comments Feed" href="specification/feed/index.html" />
+<link rel='stylesheet' id='wp-syntax-css-css'  href='wp-content/plugins/wp-syntax/css/wp-syntax.css%3Fver=1.0.css' type='text/css' media='all' />
+<link rel='stylesheet' id='theme-stylesheet-css'  href='wp-content/themes/canvas-child/style.css%3Fver=5.1.1.css' type='text/css' media='all' />
+<link rel='stylesheet' id='woo-layout-css'  href='wp-content/themes/canvas/css/layout.css%3Fver=3.8.1.css' type='text/css' media='all' />
+<script type='text/javascript' src='wp-includes/js/comment-reply.min.js%3Fver=3.8.1'></script>
+<script type='text/javascript' src='wp-includes/js/jquery/jquery.js%3Fver=1.10.2'></script>
+<script type='text/javascript' src='wp-includes/js/jquery/jquery-migrate.min.js%3Fver=1.2.1'></script>
+<script type='text/javascript' src='wp-content/themes/canvas/includes/js/third-party.js%3Fver=3.8.1'></script>
+<script type='text/javascript' src='wp-content/themes/canvas/includes/js/jquery.flexslider.min.js%3Fver=3.8.1'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var woo_localized_data = {"select_a_page":"Select a page:"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='wp-content/themes/canvas/includes/js/general.js%3Fver=3.8.1'></script>
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="xmlrpc.php%3Frsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="wp-includes/wlwmanifest.xml" /> 
+<link rel='next' title='Contact' href='contact/index.html' />
+<link rel='canonical' href='index.html' />
+<link rel='shortlink' href='index.html' />
+
+<!-- Theme version -->
+<meta name="generator" content="Canvas - Child 0.1.0" />
+<meta name="generator" content="Canvas 5.1.6" />
+<meta name="generator" content="WooFramework 5.5.5" />
+
+<!-- Custom CSS Styling -->
+<style type="text/css">
+#logo .site-title, #logo .site-description { display:block!important; }
+body {background-repeat:no-repeat;background-position:top left;background-attachment:scroll;border-top:4px solid #000000;}
+#header {background-repeat:no-repeat;background-position:top center;margin-top:0px;margin-bottom:0px;padding-top:40px;padding-bottom:30px;border:0px solid ;}
+#logo .site-title a {font:normal 40px/1em 'Oswald', arial, sans-serif;color:#222222;}
+#logo .site-description {font:italic 14px/1em 'PT Serif', arial, sans-serif;color:#999999;}
+body, p { font:normal 14px/1.5em Arial, sans-serif;color:#555555; }
+h1 { font:bold 28px/1.2em Verdana, Geneva, sans-serif;color:#222222; }h2 { font:normal 24px/1.2em Verdana, Geneva, sans-serif;color:#222222; }h3 { font:normal 20px/1.2em Verdana, Geneva, sans-serif;color:#222222; }h4 { font:normal 16px/1.2em Verdana, Geneva, sans-serif;color:#222222; }h5 { font:normal 14px/1.2em Verdana, Geneva, sans-serif;color:#222222; }h6 { font:normal 12px/1.2em Verdana, Geneva, sans-serif;color:#222222; }
+.post .title, .page .title, .post .title a:link, .post .title a:visited, .page .title a:link, .page .title a:visited {font:normal 24px/1.1em 'PT Serif', arial, sans-serif;color:#222222;}
+.post-meta { font:normal 11px/1.5em 'PT Serif', arial, sans-serif;color:#868686; }
+.entry, .entry p{ font:normal 14px/1.5em "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", sans-serif;color:#555555; }
+.post-more {font:normal 12px/1.5em Arial, sans-serif;color:#868686;border-top:4px solid #e6e6e6;border-bottom:1px solid #e6e6e6;}
+#post-author, #connect {border-top:1px solid #e6e6e6;border-bottom:4px solid #e6e6e6;border-left:1px solid #e6e6e6;border-right:1px solid #e6e6e6;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;background-color:#fafafa}
+.nav-entries, .woo-pagination {border-top:1px solid #e6e6e6;border-bottom:4px solid #e6e6e6; padding: 12px 0px; }
+.nav-entries a, .woo-pagination { font:italic 12px/1em 'PT Serif', arial, sans-serif;color:#777777; }
+.woo-pagination a, .woo-pagination a:hover {color:#777777!important}
+.widget h3 {font:bold 14px/1.2em PT Serif;color:#555555;border-bottom:3px solid #e6e6e6;}
+.widget_recent_comments li, #twitter li { border-color: #e6e6e6;}
+.widget p, .widget .textwidget { font:normal 12px/1.5em Arial, sans-serif;color:#555555; }
+.widget {font:normal 12px/1.5em Arial, sans-serif;color:#555555;border-radius:0px;-moz-border-radius:0px;-webkit-border-radius:0px;}
+#tabs .inside li a, .widget_woodojo_tabs .tabbable .tab-pane li a { font:bold 12px/1.5em 'PT Serif', arial, sans-serif;color:#555555; }
+#tabs .inside li span.meta, .widget_woodojo_tabs .tabbable .tab-pane li span.meta { font:normal 11px/1.5em "Trebuchet MS", Tahoma, sans-serif;color:#777777; }
+#tabs ul.wooTabs li a, .widget_woodojo_tabs .tabbable .nav-tabs li a { font:normal 11px/2em "Trebuchet MS", Tahoma, sans-serif;color:#777777; }
+ul.nav li a, #navigation ul.rss a { font:normal 14px/1em Arial, sans-serif;color:#555555; }
+#navigation ul.nav li ul  { border: 1px solid #dbdbdb; }
+#navigation ul.nav > li  { border-right: 1px solid #dbdbdb; }#navigation ul li:first-child, #navigation ul li:first-child a { border-radius:0px 0 0 0px; -moz-border-radius:0px 0 0 0px; -webkit-border-radius:0px 0 0 0px; }
+#navigation {border-top:1px solid #dbdbdb;border-bottom:4px solid #dbdbdb;border-left:0px solid #dbdbdb;border-right:0px solid #dbdbdb;border-radius:0px; -moz-border-radius:0px; -webkit-border-radius:0px;}
+#top ul.nav li a { font:normal 14px/1.6em Arial, sans-serif;color:#ddd; }
+#footer, #footer p { font:italic 14px/1em 'PT Serif', arial, sans-serif;color:#777777; }
+#footer {border-top:4px solid #dbdbdb;border-bottom:0px solid ;border-left:0px solid ;border-right:0px solid ;border-radius:0px; -moz-border-radius:0px; -webkit-border-radius:0px;}
+.magazine #loopedSlider .content h2.title a { font:bold 24px/1em Arial, sans-serif;color:#ffffff; }
+.magazine #loopedSlider .content .excerpt p { font:normal 12px/1.5em Arial, sans-serif;color:#cccccc; }
+.business #loopedSlider .content h2 { font:bold 24px/1em Arial, sans-serif;color:#ffffff; }
+.business #loopedSlider .content h2.title a { font:bold 24px/1em Arial, sans-serif;color:#ffffff; }
+#wrapper .business #loopedSlider .content p { font:normal 12px/1.5em Arial, sans-serif;color:#cccccc; }
+.archive_header h1 { font:normal 18px/1em Arial, sans-serif;color:#555555; }
+.archive_header {border-bottom:5px solid #e6e6e6;}
+</style>
+
+<!-- Google Webfonts -->
+<link href="http://fonts.googleapis.com/css?family=Oswald:400,300,700|PT+Serif:r,b,i,bi" rel="stylesheet" type="text/css" />
+
+<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame -->
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+<!--  Mobile viewport scale -->
+<meta content="initial-scale=1.0; maximum-scale=1.0; user-scalable=yes" name="viewport"/>
+
+<!-- Adjust the website width -->
+<style type="text/css">
+	.col-full, #wrapper { max-width: 760px !important; }
+</style>
+
+<!--[if lt IE 9]>
+<link href="http://ubjson.org/wp-content/themes/canvas/css/non-responsive.css" rel="stylesheet" type="text/css" />
+<style type="text/css">
+.col-full, #wrapper { width: 760px; max-width: 760px; }
+</style>
+<![endif]-->
+<style type="text/css">.broken_link, a.broken_link {
+	text-decoration: line-through;
+}</style>
+<!-- Custom Favicon -->
+<link rel="shortcut icon" href="wp-content/uploads/2011/09/favicon.png"/>
+<!-- Options Panel Custom CSS -->
+<style type="text/css">
+#main h1 {
+  padding-top: 2em;
+}
+
+#main h2 {
+  padding-top: 0.5em;
+}
+
+#main hr {
+  height: 3px;
+  background-color: #444444;
+}
+
+#main p {
+  text-align: justify;
+}
+
+#type-ref-table {
+  font-size: 9pt;
+  font-family: Courier New, monospaced;
+  border: 1px solid #EDEDED;
+}
+
+#type-ref-table thead tr {
+  color: #FFFFFF;
+  background-color: #444444;
+  font-weight: bold;
+}
+
+#type-ref-table tbody tr {
+  border-bottom: 1px solid #EDEDED;
+}
+
+#type-ref-table td {
+  padding: 0.4em;
+  border-right: 1px solid #EDEDED;
+}
+</style>
+
+
+<!-- Woo Shortcodes CSS -->
+<link href="wp-content/themes/canvas/functions/css/shortcodes.css" rel="stylesheet" type="text/css" />
+
+<!-- Custom Stylesheet -->
+<link href="wp-content/themes/canvas/custom.css" rel="stylesheet" type="text/css" />
+</head>
+<body class="home page page-id-14 page-template-default unknown alt-style-default one-col width-760 one-col-760">
+<div id="wrapper">        
+	    
+	<div id="header" class="col-full">
+ 		
+		       
+		<div id="logo">
+		<h1 class="site-title"><a href="index.html">Universal Binary JSON Specification</a></h1>
+<span class="site-description">The universally compatible format specification for binary JSON.</span>
+		</div><!-- /#logo -->
+	      
+	    <h3 class="nav-toggle icon"><a href="index.html#navigation">Navigation</a></h3>
+	      
+		       
+	</div><!-- /#header -->
+	<div id="navigation" class="col-full">
+		<ul id="main-nav" class="nav fl"><li id="menu-item-23" class="menu-item menu-item-type-post_type menu-item-object-page current-menu-item page_item page-item-14 current_page_item menu-item-23"><a href="index.html">Specification</a></li>
+<li id="menu-item-61" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-61"><a href="type-reference/index.html">Type Reference</a>
+<ul class="sub-menu">
+	<li id="menu-item-427" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-427"><a href="type-reference/value-types/index.html">Value Types</a></li>
+	<li id="menu-item-472" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-472"><a href="type-reference/container-types/index.html">Container Types</a></li>
+	<li id="menu-item-618" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-618"><a href="type-reference/binary-data/index.html">Binary Data</a></li>
+</ul>
+</li>
+<li id="menu-item-50" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-50"><a href="libraries/index.html">Libraries</a></li>
+<li id="menu-item-301" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-301"><a href="developer-resources/index.html">Developer Resources</a></li>
+<li id="menu-item-24" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-24"><a href="contact/index.html">Contact</a></li>
+<li id="menu-item-162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-162"><a href="thanks/index.html">Thanks</a></li>
+</ul>	
+</div><!-- /#navigation -->
+       
+    <!-- #content Starts -->
+	    <div id="content" class="col-full">
+    
+    	<div id="main-sidebar-container">    
+
+            <!-- #main Starts -->
+                        <div id="main">                     
+<div class="post-14 page type-page status-publish hentry">
+<h2 class="title">Specification</h2>	<div class="entry">
+	    <ol>
+<li><a href="index.html#quickstart">Quick Start</a></li>
+<li><a href="index.html#license">License</a></li>
+<li><a href="index.html#why">Why</a></li>
+<li><a href="index.html#goals">Goals</a></li>
+<li><a href="index.html#data_format">Data Format</a></li>
+<li><a href="index.html#size">Size Requirements</a></li>
+<li><a href="index.html#endian">Endianness</a></li>
+<li><a href="index.html#mime-type">MIME Type</a></li>
+<li><a href="index.html#file-ext">File Extension</a></li>
+<li><a href="index.html#rfe">Requests for Enhancement (RFE)</a></li>
+</ol>
+<h1><a name="quickstart"></a>Quick Start</h1>
+<hr />
+<p>You know what JSON is and you understand data formats and just want the good bits?</p>
+<ul>
+<li><span style="line-height: 13px;">Keep the <a href="type-reference/index.html">Type Reference</a> open in a tab to show you the markers and type definitions all in one page.</span></li>
+<li>Details on the <a href="type-reference/value-types/index.html">Value Types</a> (13 of them)</li>
+<li>Details on the <a href="type-reference/container-types/index.html">Container Types</a> (2 of them)
+<ul>
+<li>Don&#8217;t forget containers have an optional <a href="type-reference/container-types/index.html#optimized-format"><em>optimized format</em></a> you can leverage.</li>
+</ul>
+</li>
+<li>Grab a <a href="libraries/index.html">UBJSON library</a> for your favorite language or platform (or write your own!)</li>
+<li>Discuss questions about the Spec or Libraries in the <a href="https://groups.google.com/forum/?fromgroups#!forum/universal-binary-json">Google Group</a>.</li>
+<li>File bugs or issues in <a href="https://github.com/thebuzzmedia/universal-binary-json/issues">GitHub</a>!</li>
+</ul>
+<h1><a name="license"></a>License</h1>
+<hr />
+<p>The Universal Binary JSON Specification is licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0 License</a>.</p>
+<p>Use of the spec, either as-defined or a customized extension of it, is intended to be commercial-friendly.</p>
+<p>The ultimate purpose of this specification is to provide a useful tool for software developers to leverage in any way they see fit.</p>
+<h1><a name="why"></a>Why</h1>
+<hr />
+<p><a href="http://json.org/">JSON</a> has become a ubiquitous text-based file format for data interchange. Its simplicity, ease of processing and (relatively) rich data typing made it a natural choice for many developers needing to store or shuffle data between systems quickly and easy.</p>
+<p>Unfortunately, marshalling native programming language constructs in and out of a text-based representations does have a measurable processing cost associated with it.</p>
+<p>In high-performance applications, avoiding the text-processing step of JSON can net big wins in both processing time and size reduction of stored information, which is where a binary JSON format becomes helpful.</p>
+<p>Attempts to make using JSON faster through binary specifications like <a href="http://bsonspec.org/">BSON</a>, <a href="http://bjson.org/">BJSON</a> or <a href="http://wiki.fasterxml.com/SmileFormatSpec">Smile</a> exist, but have been <a href="https://issues.apache.org/jira/browse/COUCHDB-702">rejected</a> from <a href="http://bsonspec.org/#/implementation">mass-adoption</a> for two reasons:</p>
+<ol>
+<li><strong>Custom (Binary-Only) Data Types</strong>: Inclusion of custom data types that have no ancillary in the original JSON spec, leaving room for incompatibilities to exist as different implementations of the spec handle the binary-only data types differently.</li>
+<li><strong>Complexity</strong>: Some specifications provide higher performance or smaller representations at the cost of a <a href="http://wiki.fasterxml.com/SmileFormatSpec">much more complex specification</a>, making implementations more difficult which can slow or block adoption. One of the key reasons JSON became as popular as it did was because of its ease of use.</li>
+</ol>
+<p>BSON, for example, defines types for binary data, regular expressions, JavaScript code blocks and other constructs that have no equivalent data type in JSON. BJSON defines a <em>binary</em> data type as well, again leaving the door wide open to interpretation that can potentially lead to incompatibilities between two implementations of the spec and Smile, while the closest, defines more complex data constructs and generation/parsing rules in the name of absolute space efficiency. These are not short-comings, just trade-offs the different specs made in order to service specific use-cases.</p>
+<p>The existing binary JSON specifications all define incompatibilities or complexities that undo the singular tenant that made JSON so successful: <strong>simplicity</strong>.</p>
+<p>JSON&#8217;s simplicity made it accessible to anyone, made implementations in every language available and made explaining it to anyone consuming your data immediate.</p>
+<p>Any successful binary JSON specification must carry these properties forward for it to be genuinely helpful to the community at large.</p>
+<p>This specification is defined around a singular marker-based construct used to build up and represent JSON values and objects. Reading and writing the format is trivial, designed with the goal of being understood in under 10 minutes (likely less if you are very comfortable with JSON already).</p>
+<div class="woo-sc-box info   "><strong>TIP</strong>: UBJSON is built exclusively out of marker-characters like &#8216;C&#8217; (for CHAR), &#8216;S&#8217; (for STRING), etc. followed by either the payload itself, or a length and then the payload&#8230; that&#8217;s it!</div>
+<p>Fortunately, while the Universal Binary JSON specification carries these tenants of simplicity forward, it is also able to take advantage of optimized binary data structures that are (on average) 30% smaller than compacted JSON and specified for ultimate read performance; bringing <strong>simplicity, size</strong> and <strong>performance</strong> all together into a single specification that is 100% compatible with JSON.</p>
+<h2>Why not JSON+gzip?</h2>
+<p>On the surface simply gzipping your compacted JSON may seem like a valid (and smaller) alternative to using the Universal Binary JSON specification, but there are two significant costs associated with this approach that you should be aware of:</p>
+<ol>
+<li>At least a <a href="http://www.cowtowncoder.com/blog/archives/2009/05/entry_263.html">50% performance overhead</a> for processing the data.</li>
+<li>Lack of data clarity and inability to inspect it directly.</li>
+</ol>
+<p>While gzipping your JSON will give you great compression, about 75% on average, the overhead required to read/write the data becomes significantly higher.</p>
+<p>Additionally, because the binary data is now in a compressed format you can no longer open it directly in an editor and scan the human-readable portions of it easily; which can be important during debugging, testing or data verification and recovery.</p>
+<p>Utilizing the Universal Binary JSON format will typically provide <a href="index.html#size">a 30% reduction in size</a> <em>and</em> store your data in an optimized format offering you much higher performance while still allowing you to open the file directly and read through it.</p>
+<p>If you had a usage scenario where your data is put into long-term cold storage and pulled out in large chunks for processing, you might even consider gzipping your Universal Binary JSON files, storing those, and when they are pulled out and unzipped, you can then process them with all the speed advantages of UBJSON.</p>
+<p>As always, deciding which approach is right for your project depends heavily on what you need.</p>
+<h1><a name="goals"></a>Goals</h1>
+<hr />
+<p>The Universal Binary JSON specification has 3 goals:</p>
+<p><strong>1. Universal Compatibility</strong></p>
+<p style="padding-left: 30px;">Meaning absolute compatibility with the JSON spec itself as well as only utilizing data types that are natively supported in all popular programming languages.</p>
+<p style="padding-left: 30px;">This allows 1:1 transforms between standard JSON and Universal Binary JSON as well as efficient representation in all popular programming languages without requiring parser developers to account for strange data types that their language may not support.</p>
+<p><strong>2. Ease of Use</strong></p>
+<p style="padding-left: 30px;">The Universal Binary JSON specification is intentionally defined using a single core data structure to build up the entire specification.</p>
+<p style="padding-left: 30px;">This accomplishes two things: it allows the spec to be understood quickly and allows developers to write trivially simple code to take advantage of it or interchange data with another system utilizing it.</p>
+<p><strong>3. Speed / Efficiency</strong></p>
+<p style="padding-left: 30px;">Typically the motivation for using a binary specification over a text-based one is speed and/or efficiency, so strict attention was paid to selecting data constructs and representations that are (roughly) 30% smaller than their compacted JSON counterparts and optimized for fast parsing.</p>
+<h1><a name="data_format"></a>Data Format</h1>
+<hr />
+<p>The Universal Binary JSON specification utilizes a single construct with two optional segments (<em>length</em> and <em>data) </em>for all types:</p>
+<pre style="padding-left: 30px;"><div class="woo-sc-box info   full" style="padding-left:15px;background-image:none;">[<strong>type</strong>, 1-byte char]([integer numeric <strong>length</strong>])([<strong>data</strong>])</div></pre>
+<p>Each element in the tuple is defined as:</p>
+<ul>
+<li><strong>type</strong>
+<ul>
+<li>A 1-byte ASCII char used to indicate the <a href="type-reference/index.html">type</a> of the data following it.</li>
+</ul>
+</li>
+<li><strong>length</strong> (<em>OPTIONAL</em>)
+<ul>
+<li>A positive, integer <a href="type-reference/value-types/index.html#numeric">numeric type</a> specifying the length of the following data payload.</li>
+</ul>
+</li>
+<li><strong>data</strong> (<em>OPTIONAL</em>)
+<ul>
+<li>A run of bytes representing the actual binary data for this type of value.</li>
+</ul>
+</li>
+</ul>
+<p>Some value are simple enough that just writing the 1-byte ASCII marker into the stream is enough to represent the value (e.g. <em>null</em>) while others have a <em>type</em> that is specific enough that no <em>length</em> is needed as the length is implied by the type (e.g. <em>int32</em>) while others still require both a <em>type</em> and a <em>length</em> to communicate their value (e.g. <em>string</em>).</p>
+<h2>Types</h2>
+<p>Universal Binary JSON defines a number of <a href="type-reference/value-types/index.html"><em>Value Types</em></a> and <a href="type-reference/container-types/index.html"><em>Container Types</em></a> that map directly to <a href="http://json.org/">JSON&#8217;s types</a>. For the most part the correlation is 1:1 except in the case of <a href="type-reference/value-types/index.html#numeric"><em>numeric </em>types</a> where UBJSON defines many more specific types of number storage and representation than JSON&#8217;s single <em>number</em> type.</p>
+<ul>
+<li><a href="type-reference/index.html">Type Reference</a> (Overview)
+<ul>
+<li><a href="type-reference/value-types/index.html">Value Types</a></li>
+<li><a href="type-reference/container-types/index.html">Container Types</a></li>
+</ul>
+</li>
+</ul>
+<h1><a name="size"></a>Size Requirements</h1>
+<hr />
+<p>The Universal Binary JSON specification tries to strike the perfect balance between space savings, simplicity and performance.</p>
+<p>Data stored using the Universal Binary JSON format are on average <strong>30% smaller</strong> as a rule of thumb. As you can see from some of the examples in this document though, it is not uncommon to see the binary representation of some data lead to <a href="type-reference/container-types/index.html#array-example">a 50% or 60% size reduction</a> without compression.</p>
+<p>The size reduction of your data depends heavily on the type of data you are storing. It is best to do your own benchmarking with a comprehensive sampling of your own data.</p>
+<div class="woo-sc-box note   ">The Universal Binary JSON specification does not use compression algorithms to achieve smaller storage sizes. The size reduction is a side effect of the efficient binary storage format.</div>
+<h3>Size Reduction Tips</h3>
+<p>The amount of storage size reduction you&#8217;ll experience with the Universal Binary JSON format will depend heavily on the type of data you are encoding.</p>
+<p>Some data shrinks considerably, some mildly and some not at all, but in every case your data will be stored in a much more efficient format that is faster to read and write.</p>
+<p>Below are pointers to give you an idea of how certain data may shrink in this format:</p>
+<ul>
+<li><em>null</em><strong>, </strong><em>true</em> and <em>false</em> values will be <strong>75% smaller</strong> (80% in the case of <em>false</em>)</li>
+<li>Large <em>numeric</em> values (&gt; 5 digits &lt; 20 digits) will be <strong>50% smaller</strong>.</li>
+<li><i>array</i> and <i>object </i>containers will be <strong>1-byte-per-value smaller</strong>.</li>
+<li>Leveraging the <a href="type-reference/container-types/index.html#optimized-format"><em>optimized container format</em></a> can lead to a <strong>significant</strong> size reduction in environments where container data is of the same type.</li>
+<li><i>string </i>values are 2-10 bytes bigger <em>per string</em> (depending on the length of the string being represented by the smaller integer numeric type).</li>
+</ul>
+<p>One of the great things about the Universal Binary JSON format is that even though most all your data will be represented in a smaller footprint, you still get two big wins:</p>
+<ol>
+<li>A smaller data format means faster writes and smaller reads. It also means less data to process when parsing.</li>
+<li>Binary format means no encoding/decoding primitive values to text and no parsing primitive values from text.</li>
+</ol>
+<h1><a name="endian"></a>Endianness</h1>
+<hr />
+<p>The Universal Binary JSON specification requires that all numeric values be written in <a href="http://en.wikipedia.org/wiki/Endianness">Big-Endian</a> order.</p>
+<h1><a name="mime-type"></a>MIME Type</h1>
+<hr />
+<p>The Universal Binary JSON specification is a binary format and recommends using the following mime type:<br />
+<div class="woo-sc-box info   full" style="padding-left:15px;background-image:none;">application/ubjson</div></p>
+<p>This was added directly to the specification in hopes of avoiding <a href="http://stackoverflow.com/questions/477816/the-right-json-content-type">similar confusion with JSON</a>.</p>
+<h1><a name="file-ext"></a>File Extension</h1>
+<hr />
+<p>&#8220;<strong>ubj</strong>&#8221; is the <a href="http://www.fileinfo.com/extension/ubj">recommended file extension</a> when writing out files using the Universal Binary JSON format (e.g. &#8220;<em>user.ubj</em>&#8220;).</p>
+<p>The extension stands for &#8220;<em>Universal Binary JSON</em>&#8221; and has no known conflicting mappings to other file formats.</p>
+<h1><a name="rfe"></a>Requests for Enhancement (RFE)</h1>
+<hr />
+<p>All (proposed) changes to the specification are being tracked in <a href="https://github.com/thebuzzmedia/universal-binary-json/issues">GitHub</a>.</p>
+	</div><!-- /.entry -->
+	<div class="fix"></div>
+</div><!-- /.post -->
+     
+            </div><!-- /#main -->
+                
+            
+		</div><!-- /#main-sidebar-container -->         
+
+		
+    </div><!-- /#content -->
+	
+	<div id="footer" class="col-full">
+	
+		    
+	    
+		<div id="copyright" class="col-left">
+			<p><p>&copy; 2013 The Buzz Media, LLC</p></p>		</div>
+		
+		<div id="credit" class="col-right">
+			<p><p></p></p>		</div>
+		
+	</div><!-- /#footer  -->
+	
+	    
+	
+	</div><!-- /#wrapper -->
+	
+	<div class="fix"></div><!--/.fix-->
+	
+	<script type="text/javascript">
+var clicky_site_ids = clicky_site_ids || [];
+clicky_site_ids.push(66482614);
+(function() {
+  var s = document.createElement('script');
+  s.type = 'text/javascript';
+  s.async = true;
+  s.src = '//static.getclicky.com/js';
+  ( document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0] ).appendChild( s );
+})();
+</script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var wooFeedbackL10n = {"nextButton":"Next \u2192","prevButton":"\u2190 Previous"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='wp-content/themes/canvas/includes/js/feedback.js%3Fver=5.0.7'></script>
+		</body>
+</html>
+<!-- Dynamic page generated in 0.236 seconds. -->
+<!-- Cached page generated by WP-Super-Cache on 2014-08-10 14:28:34 -->
+
+<!-- super cache -->

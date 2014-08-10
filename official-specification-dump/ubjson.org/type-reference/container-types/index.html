@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8" />
+<title>Container Types | Universal Binary JSON Specification</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="pingback" href="../../xmlrpc.php" />
+<link rel="alternate" type="application/rss+xml" title="Universal Binary JSON Specification &raquo; Feed" href="http://ubjson.org/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Universal Binary JSON Specification &raquo; Comments Feed" href="http://ubjson.org/comments/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Universal Binary JSON Specification &raquo; Container Types Comments Feed" href="feed/index.html" />
+<link rel='stylesheet' id='wp-syntax-css-css'  href='../../wp-content/plugins/wp-syntax/css/wp-syntax.css%3Fver=1.0.css' type='text/css' media='all' />
+<link rel='stylesheet' id='theme-stylesheet-css'  href='../../wp-content/themes/canvas-child/style.css%3Fver=5.1.1.css' type='text/css' media='all' />
+<link rel='stylesheet' id='woo-layout-css'  href='../../wp-content/themes/canvas/css/layout.css%3Fver=3.8.1.css' type='text/css' media='all' />
+<script type='text/javascript' src='../../wp-includes/js/comment-reply.min.js%3Fver=3.8.1'></script>
+<script type='text/javascript' src='../../wp-includes/js/jquery/jquery.js%3Fver=1.10.2'></script>
+<script type='text/javascript' src='../../wp-includes/js/jquery/jquery-migrate.min.js%3Fver=1.2.1'></script>
+<script type='text/javascript' src='../../wp-content/themes/canvas/includes/js/third-party.js%3Fver=3.8.1'></script>
+<script type='text/javascript' src='../../wp-content/themes/canvas/includes/js/jquery.flexslider.min.js%3Fver=3.8.1'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var woo_localized_data = {"select_a_page":"Select a page:"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='../../wp-content/themes/canvas/includes/js/general.js%3Fver=3.8.1'></script>
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="../../xmlrpc.php%3Frsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="../../wp-includes/wlwmanifest.xml" /> 
+<link rel='prev' title='Value Types' href='../value-types/index.html' />
+<link rel='next' title='Binary Data' href='../binary-data/index.html' />
+<link rel='canonical' href='index.html' />
+<link rel='shortlink' href='index.html' />
+
+<!-- Theme version -->
+<meta name="generator" content="Canvas - Child 0.1.0" />
+<meta name="generator" content="Canvas 5.1.6" />
+<meta name="generator" content="WooFramework 5.5.5" />
+
+<!-- Custom CSS Styling -->
+<style type="text/css">
+#logo .site-title, #logo .site-description { display:block!important; }
+body {background-repeat:no-repeat;background-position:top left;background-attachment:scroll;border-top:4px solid #000000;}
+#header {background-repeat:no-repeat;background-position:top center;margin-top:0px;margin-bottom:0px;padding-top:40px;padding-bottom:30px;border:0px solid ;}
+#logo .site-title a {font:normal 40px/1em 'Oswald', arial, sans-serif;color:#222222;}
+#logo .site-description {font:italic 14px/1em 'PT Serif', arial, sans-serif;color:#999999;}
+body, p { font:normal 14px/1.5em Arial, sans-serif;color:#555555; }
+h1 { font:bold 28px/1.2em Verdana, Geneva, sans-serif;color:#222222; }h2 { font:normal 24px/1.2em Verdana, Geneva, sans-serif;color:#222222; }h3 { font:normal 20px/1.2em Verdana, Geneva, sans-serif;color:#222222; }h4 { font:normal 16px/1.2em Verdana, Geneva, sans-serif;color:#222222; }h5 { font:normal 14px/1.2em Verdana, Geneva, sans-serif;color:#222222; }h6 { font:normal 12px/1.2em Verdana, Geneva, sans-serif;color:#222222; }
+.post .title, .page .title, .post .title a:link, .post .title a:visited, .page .title a:link, .page .title a:visited {font:normal 24px/1.1em 'PT Serif', arial, sans-serif;color:#222222;}
+.post-meta { font:normal 11px/1.5em 'PT Serif', arial, sans-serif;color:#868686; }
+.entry, .entry p{ font:normal 14px/1.5em "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", sans-serif;color:#555555; }
+.post-more {font:normal 12px/1.5em Arial, sans-serif;color:#868686;border-top:4px solid #e6e6e6;border-bottom:1px solid #e6e6e6;}
+#post-author, #connect {border-top:1px solid #e6e6e6;border-bottom:4px solid #e6e6e6;border-left:1px solid #e6e6e6;border-right:1px solid #e6e6e6;border-radius:5px;-moz-border-radius:5px;-webkit-border-radius:5px;background-color:#fafafa}
+.nav-entries, .woo-pagination {border-top:1px solid #e6e6e6;border-bottom:4px solid #e6e6e6; padding: 12px 0px; }
+.nav-entries a, .woo-pagination { font:italic 12px/1em 'PT Serif', arial, sans-serif;color:#777777; }
+.woo-pagination a, .woo-pagination a:hover {color:#777777!important}
+.widget h3 {font:bold 14px/1.2em PT Serif;color:#555555;border-bottom:3px solid #e6e6e6;}
+.widget_recent_comments li, #twitter li { border-color: #e6e6e6;}
+.widget p, .widget .textwidget { font:normal 12px/1.5em Arial, sans-serif;color:#555555; }
+.widget {font:normal 12px/1.5em Arial, sans-serif;color:#555555;border-radius:0px;-moz-border-radius:0px;-webkit-border-radius:0px;}
+#tabs .inside li a, .widget_woodojo_tabs .tabbable .tab-pane li a { font:bold 12px/1.5em 'PT Serif', arial, sans-serif;color:#555555; }
+#tabs .inside li span.meta, .widget_woodojo_tabs .tabbable .tab-pane li span.meta { font:normal 11px/1.5em "Trebuchet MS", Tahoma, sans-serif;color:#777777; }
+#tabs ul.wooTabs li a, .widget_woodojo_tabs .tabbable .nav-tabs li a { font:normal 11px/2em "Trebuchet MS", Tahoma, sans-serif;color:#777777; }
+ul.nav li a, #navigation ul.rss a { font:normal 14px/1em Arial, sans-serif;color:#555555; }
+#navigation ul.nav li ul  { border: 1px solid #dbdbdb; }
+#navigation ul.nav > li  { border-right: 1px solid #dbdbdb; }#navigation ul li:first-child, #navigation ul li:first-child a { border-radius:0px 0 0 0px; -moz-border-radius:0px 0 0 0px; -webkit-border-radius:0px 0 0 0px; }
+#navigation {border-top:1px solid #dbdbdb;border-bottom:4px solid #dbdbdb;border-left:0px solid #dbdbdb;border-right:0px solid #dbdbdb;border-radius:0px; -moz-border-radius:0px; -webkit-border-radius:0px;}
+#top ul.nav li a { font:normal 14px/1.6em Arial, sans-serif;color:#ddd; }
+#footer, #footer p { font:italic 14px/1em 'PT Serif', arial, sans-serif;color:#777777; }
+#footer {border-top:4px solid #dbdbdb;border-bottom:0px solid ;border-left:0px solid ;border-right:0px solid ;border-radius:0px; -moz-border-radius:0px; -webkit-border-radius:0px;}
+.magazine #loopedSlider .content h2.title a { font:bold 24px/1em Arial, sans-serif;color:#ffffff; }
+.magazine #loopedSlider .content .excerpt p { font:normal 12px/1.5em Arial, sans-serif;color:#cccccc; }
+.business #loopedSlider .content h2 { font:bold 24px/1em Arial, sans-serif;color:#ffffff; }
+.business #loopedSlider .content h2.title a { font:bold 24px/1em Arial, sans-serif;color:#ffffff; }
+#wrapper .business #loopedSlider .content p { font:normal 12px/1.5em Arial, sans-serif;color:#cccccc; }
+.archive_header h1 { font:normal 18px/1em Arial, sans-serif;color:#555555; }
+.archive_header {border-bottom:5px solid #e6e6e6;}
+</style>
+
+<!-- Google Webfonts -->
+<link href="http://fonts.googleapis.com/css?family=Oswald:400,300,700|PT+Serif:r,b,i,bi" rel="stylesheet" type="text/css" />
+
+<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame -->
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+<!--  Mobile viewport scale -->
+<meta content="initial-scale=1.0; maximum-scale=1.0; user-scalable=yes" name="viewport"/>
+
+<!-- Adjust the website width -->
+<style type="text/css">
+	.col-full, #wrapper { max-width: 760px !important; }
+</style>
+
+<!--[if lt IE 9]>
+<link href="http://ubjson.org/wp-content/themes/canvas/css/non-responsive.css" rel="stylesheet" type="text/css" />
+<style type="text/css">
+.col-full, #wrapper { width: 760px; max-width: 760px; }
+</style>
+<![endif]-->
+<style type="text/css">.broken_link, a.broken_link {
+	text-decoration: line-through;
+}</style>
+<!-- Custom Favicon -->
+<link rel="shortcut icon" href="../../wp-content/uploads/2011/09/favicon.png"/>
+<!-- Options Panel Custom CSS -->
+<style type="text/css">
+#main h1 {
+  padding-top: 2em;
+}
+
+#main h2 {
+  padding-top: 0.5em;
+}
+
+#main hr {
+  height: 3px;
+  background-color: #444444;
+}
+
+#main p {
+  text-align: justify;
+}
+
+#type-ref-table {
+  font-size: 9pt;
+  font-family: Courier New, monospaced;
+  border: 1px solid #EDEDED;
+}
+
+#type-ref-table thead tr {
+  color: #FFFFFF;
+  background-color: #444444;
+  font-weight: bold;
+}
+
+#type-ref-table tbody tr {
+  border-bottom: 1px solid #EDEDED;
+}
+
+#type-ref-table td {
+  padding: 0.4em;
+  border-right: 1px solid #EDEDED;
+}
+</style>
+
+
+<!-- Woo Shortcodes CSS -->
+<link href="../../wp-content/themes/canvas/functions/css/shortcodes.css" rel="stylesheet" type="text/css" />
+
+<!-- Custom Stylesheet -->
+<link href="../../wp-content/themes/canvas/custom.css" rel="stylesheet" type="text/css" />
+</head>
+<body class="page page-id-463 page-child parent-pageid-56 page-template-default unknown alt-style-default one-col width-760 one-col-760">
+<div id="wrapper">        
+	    
+	<div id="header" class="col-full">
+ 		
+		       
+		<div id="logo">
+		<span class="site-title"><a href="../../index.html">Universal Binary JSON Specification</a></span>
+<span class="site-description">The universally compatible format specification for binary JSON.</span>
+		</div><!-- /#logo -->
+	      
+	    <h3 class="nav-toggle icon"><a href="index.html#navigation">Navigation</a></h3>
+	      
+		       
+	</div><!-- /#header -->
+	<div id="navigation" class="col-full">
+		<ul id="main-nav" class="nav fl"><li id="menu-item-23" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-23"><a href="../../index.html">Specification</a></li>
+<li id="menu-item-61" class="menu-item menu-item-type-post_type menu-item-object-page current-page-ancestor current-menu-ancestor current-menu-parent current-page-parent current_page_parent current_page_ancestor menu-item-has-children menu-item-61"><a href="../index.html">Type Reference</a>
+<ul class="sub-menu">
+	<li id="menu-item-427" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-427"><a href="../value-types/index.html">Value Types</a></li>
+	<li id="menu-item-472" class="menu-item menu-item-type-post_type menu-item-object-page current-menu-item page_item page-item-463 current_page_item menu-item-472"><a href="index.html">Container Types</a></li>
+	<li id="menu-item-618" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-618"><a href="../binary-data/index.html">Binary Data</a></li>
+</ul>
+</li>
+<li id="menu-item-50" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-50"><a href="../../libraries/index.html">Libraries</a></li>
+<li id="menu-item-301" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-301"><a href="../../developer-resources/index.html">Developer Resources</a></li>
+<li id="menu-item-24" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-24"><a href="../../contact/index.html">Contact</a></li>
+<li id="menu-item-162" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-162"><a href="../../thanks/index.html">Thanks</a></li>
+</ul>	
+</div><!-- /#navigation -->
+       
+    <!-- #content Starts -->
+	    <div id="content" class="col-full">
+    
+    	<div id="main-sidebar-container">    
+
+            <!-- #main Starts -->
+                        <div id="main">                     
+<div class="post-463 page type-page status-publish hentry">
+<h1 class="title">Container Types</h1>	<div class="entry">
+	    <p>The Universal Binary JSON Specification defines a total of <strong>2 container types</strong> matching <a href="http://json.org/">JSON&#8217;s container types</a>:</p>
+<ol>
+<li><a href="index.html#array">Array Type</a></li>
+<li><a href="index.html#object">Object Type</a></li>
+</ol>
+<p>Ignoring special-case optimizations, the design of the Universal Binary JSON containers is intentionally identical to JSON (the same start/end markers) and are <strong>streaming-friendly</strong>; more specifically they can be written out on-demand without knowing the size of the container ahead of time.</p>
+<h3>Optimized Format</h3>
+<p>Both <em>array</em> and <em>object</em> container types in UBJSON support being represented in a more optimized format that can increase parsing performance as well as shrink data size in most cases (without compression).</p>
+<p>Please see <a href="index.html#optimized-format">Optimized Format</a> below for details on how to leverage this support.</p>
+<h1><a name="array"></a>Array Type</h1>
+<hr />
+<ul>
+<li><a href="index.html#array-use">Usage</a></li>
+<li><a href="index.html#array-example">Example</a></li>
+</ul>
+<p>The <i>array</i> type in Universal Binary JSON is defined as:</p>
+<table id="type-ref-table" style="width: 100%;" border="0">
+<thead>
+<tr>
+<td>Type</td>
+<td>Size</td>
+<td>Marker</td>
+<td>Length</td>
+<td>Data Payload</td>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>array</td>
+<td> 2+ bytes**</td>
+<td> [ and ]</td>
+<td> Optional</td>
+<td> Yes (if non-empty)</td>
+</tr>
+</tbody>
+</table>
+<p><sup>** See <a href="index.html#optimized-format">Optimized Format</a> below.</sup></p>
+<h3><a name="array-use"></a>Usage</h3>
+<p>The <em>array</em> type in Universal Binary JSON is equivalent to the <strong>array</strong> type from the <a href="http://json.org/">JSON specification</a>.</p>
+<h3><a name="array-example"></a>Example</h3>
+<p>JSON snippet (42 bytes compacted):</p>
+
+<div class="wp_syntax"><table><tr><td class="code"><pre class="javascript" style="font-family:monospace;"><span style="color: #009900;">&#91;</span>
+    <span style="color: #003366; font-weight: bold;">null</span><span style="color: #339933;">,</span>
+    <span style="color: #003366; font-weight: bold;">true</span><span style="color: #339933;">,</span>
+    <span style="color: #003366; font-weight: bold;">false</span><span style="color: #339933;">,</span>
+    <span style="color: #CC0000;">4782345193</span><span style="color: #339933;">,</span>
+    <span style="color: #CC0000;">153.132</span><span style="color: #339933;">,</span>
+    <span style="color: #3366CC;">&quot;ham&quot;</span>
+<span style="color: #009900;">&#93;</span></pre></td></tr></table></div>
+
+<p>UBJSON snippet (21 bytes, <strong>50% smaller</strong>):</p>
+<pre style="padding-left: 30px;">[[]
+    [Z]
+    [T]
+    [F]
+    [l][4782345193]
+    [d][153.132]
+    [S][i][3][ham]
+[]]</pre>
+<div class="woo-sc-box tick   ">Universal Binary JSON format is <strong>50% smaller</strong> than the compacted JSON.</div>
+<h1><a name="object"></a>Object Type</h1>
+<hr />
+<ul>
+<li><a href="index.html#object-use">Usage</a></li>
+<li><a href="index.html#object-example">Example</a></li>
+</ul>
+<p>The <i>object</i> type in Universal Binary JSON is defined as:</p>
+<table id="type-ref-table" style="width: 100%;" border="0">
+<thead>
+<tr>
+<td>Type</td>
+<td>Size</td>
+<td>Marker</td>
+<td>Length</td>
+<td>Data Payload</td>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>object</td>
+<td> 2+ bytes**</td>
+<td> { and }</td>
+<td> Optional</td>
+<td> Yes (if non-empty)</td>
+</tr>
+</tbody>
+</table>
+<p><sup>** See <a href="index.html#optimized-format">Optimized Format</a> below.</sup></p>
+<h3><a name="object-use"></a>Usage</h3>
+<p>The <em>object</em> type in Universal Binary JSON is equivalent to the <strong>object</strong> type from the <a href="http://json.org/">JSON specification</a>.</p>
+<h3><a name="object-example"></a>Example</h3>
+<p>JSON snippet (90 bytes compacted):</p>
+
+<div class="wp_syntax"><table><tr><td class="code"><pre class="javascript" style="font-family:monospace;"><span style="color: #009900;">&#123;</span>
+    <span style="color: #3366CC;">&quot;post&quot;</span><span style="color: #339933;">:</span> <span style="color: #009900;">&#123;</span>
+        <span style="color: #3366CC;">&quot;id&quot;</span><span style="color: #339933;">:</span> <span style="color: #CC0000;">1137</span><span style="color: #339933;">,</span>
+        <span style="color: #3366CC;">&quot;author&quot;</span><span style="color: #339933;">:</span> <span style="color: #3366CC;">&quot;rkalla&quot;</span><span style="color: #339933;">,</span>
+        <span style="color: #3366CC;">&quot;timestamp&quot;</span><span style="color: #339933;">:</span> <span style="color: #CC0000;">1364482090592</span><span style="color: #339933;">,</span>
+        <span style="color: #3366CC;">&quot;body&quot;</span><span style="color: #339933;">:</span> <span style="color: #3366CC;">&quot;I totally agree!&quot;</span>
+    <span style="color: #009900;">&#125;</span>
+<span style="color: #009900;">&#125;</span></pre></td></tr></table></div>
+
+<p>UBJSON snippet (82 bytes, <strong>9% smaller</strong>):</p>
+<pre style="padding-left: 30px;">[{]
+    [i][4][post][{]
+        [i][2][id][I][1137]
+        [i][6][author][S][i][5][rkalla]
+        [i][9][timestamp][L][1364482090592]
+        [i][4][body][S][i][16][I totally agree!]
+    [}]
+[}]</pre>
+<div class="woo-sc-box info   "><strong>NOTE</strong>: The [S] (<em>string</em>) marker is omitted from each of the <i>names</i> in the <em>name/value</em> pairings inside the object. The JSON specification does not allow non-<em>string</em> <em>name</em> values, therefore the [S] marker is redundant and <span style="text-decoration: underline"><strong>must not</strong></span> be used.</div>
+<h1><a name="optimized-format"></a>Optimized Format</h1>
+<hr />
+<ul>
+<li><a href="index.html#optimized-format-example-array">Array Example</a></li>
+<li><a href="index.html#optimized-format-example-object">Object Example</a></li>
+<li><a href="index.html#optimized-special-cases">Special Cases</a> (Null, No-Op and Boolean)</li>
+<li><a href="index.html#optimized-size-perf-benefits">Size &amp; Performance Benefits</a></li>
+<li><a href="index.html#optimized-binary-support">Binary Data Support</a></li>
+</ul>
+<p>While the basic specification for the <em>array</em> and <em>object</em> types are identical to the JSON specification (i.e. simple beginning and end markers), both containers support <em>optional</em> parameters that can help optimize the container for better parsing performance and smaller size.</p>
+<p>At a very high level, the optimized format for both <em>array</em> and <i>object</i> container types are built around two optional parameters: <strong>type</strong> and <strong>count</strong></p>
+<table id="type-ref-table" style="width: 100%;" border="0">
+<thead>
+<tr>
+<td>Type</td>
+<td>Size</td>
+<td>Marker</td>
+<td>Arg. Type</td>
+<td>Example</td>
+<td>Desc</td>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>type</td>
+<td> 1-byte</td>
+<td> $</td>
+<td> <a href="../value-types/index.html">Value Type</a> or <a href="index.html">Container Type</a> Marker</td>
+<td> [$][S]</td>
+<td> string type</td>
+</tr>
+<tr>
+<td>count</td>
+<td> 1-byte</td>
+<td> #</td>
+<td> Integer <a href="../value-types/index.html#numeric">Numeric Value</a></td>
+<td> [#][i][64]</td>
+<td> count of 64</td>
+</tr>
+</tbody>
+</table>
+<p>The effect on the container when specifying one or both parameters is as follows:</p>
+<ul>
+<li><strong>type</strong> [<strong><span style="color: #0000ff;">$</span></strong>] &#8211; when a <strong>type</strong> is specified, all <em>value</em> types stored in the container (either <em>array</em> or <em>object</em>) are considered to be of that singular type and as a result, type markers are omitted for each value in the container. This can be thought of providing the ability to create a strongly typed container in UBJSON.
+<ul>
+<li>If a <strong>type</strong> is specified, it must be done so before a <strong>count</strong>.</li>
+<li>If a <strong>type</strong> is specified, a <strong>count</strong> must be specified as well (otherwise it is impossible to tell when a container is ending; e.g., did you just parse &#8216;]&#8217; or the int8 value of 93?)</li>
+</ul>
+</li>
+<li><strong>count</strong> [<strong><span style="color: #0000ff;">#</span></strong>] &#8211; when a <strong>count</strong> is specified, the parser is able to know ahead of time how many child elements will be parsed. This allows the parser to pre-size any internal construct used for parsing, verify that the promised number of child <em>values</em> were found and avoid scanning for any terminating bytes while parsing.
+<ul>
+<li>A <strong>count</strong> can be specified without a <strong>type</strong>.</li>
+</ul>
+</li>
+</ul>
+<div class="woo-sc-box info   "><strong>NOTE</strong>: Yes it is possible for an <em>array</em> or <em>object</em> to define their <strong>type</strong> as &#8216;[' or '{' to signal that they themselves contain additional containers!</div>
+<div class="woo-sc-box download   "><strong>BONUS</strong>: Parsers can provide <em>highly-optimized</em> implementations for strongly typed containers of non-variable-length types (e.g. numeric, boolean, etc.) because the exact byte-length of the data is known!</div>
+<p>Some rules that generators and parsers need to be aware of when dealing with these optional parameters is as follows:</p>
+<ul>
+<li>[count] A <strong>count</strong> must be &gt;= 0.</li>
+<li>[count] A <strong>count</strong> <span style="text-decoration: underline; color: #339966;">can</span> be specified by itself.</li>
+<li>[count] If a <strong>count</strong> is specified the container <span style="text-decoration: underline; color: #ff0000;">must not</span> specify an end-marker.</li>
+<li>[count] A container that specifies a <strong>count</strong> <span style="text-decoration: underline; color: #339966;">must</span> contain the specified number of child elements.</li>
+<li>[type] If a <strong>type</strong> is specified, it must be done so before <strong>count</strong>.</li>
+<li>[type] If a <strong>type</strong> is specified, a <strong>count</strong> <span style="text-decoration: underline; color: #339966;">must</span> also be specified. A <strong>type</strong> cannot be specified by itself.</li>
+<li>[type] A container that specifies a <strong>type</strong> <span style="text-decoration: underline; color: #ff0000;">must not</span> contain any additional type markers for any contained value.</li>
+</ul>
+<p><a name="optimized-format-example-array"></a></p>
+<h2>Array Example</h2>
+<p>Below are examples of incrementally more optimized representations of an <em>array</em> in UBJSON.</p>
+<h3>No Optimization<strong><br />
+</strong></h3>
+<pre>[[]
+    [d][29.97]
+    [d][31.13]
+    [d][67.0]
+    [d][2.113]
+    [d][23.888]
+[]]</pre>
+<h3>Optimized with count</h3>
+<pre>[[][#][i][5] // An array of 5 elements.
+    [d][29.97]
+    [d][31.13]
+    [d][67.0]
+    [d][2.113]
+    [d][23.8889]
+// No end marker since a count was specified.</pre>
+<h3>Optimized with type &amp; count</h3>
+<pre>[[][$][d][#][i][5] // An array of 5 float32 elements.
+    [29.97] // Value type is known, so type markers are omitted.
+    [31.13]
+    [67.0]
+    [2.113]
+    [23.8889]
+// No end marker since a count was specified.</pre>
+<p><a name="optimized-format-example-object"></a></p>
+<h2>Object Example</h2>
+<p>Below are examples of incrementally more optimized representations of an <em>object</em> in UBJSON.</p>
+<div class="woo-sc-box info   ">Remember, in UBJSON the <i>string </i>markers ([S]) are omitted from the <em>names</em> in the <em>name-value</em> pairs of an Object because JSON only allows <em>names</em> of type <em>string</em>.</div>
+<h3>No Optimization<strong><br />
+</strong></h3>
+<pre>[{]
+    [i][3][lat][d][29.976]
+    [i][4][long][d][31.131]
+    [i][3][alt][d][67.0]
+[}]</pre>
+<h3>Optimized with count</h3>
+<pre>[{][#][i][3] // An object of 3 name:value pairs.
+    [i][3][lat][d][29.976]
+    [i][4][long][d][31.131]
+    [i][3][alt][d][67.0]
+// No end marker since a count was specified.</pre>
+<h3>Optimized with type &amp; count</h3>
+<pre>[{][$][d][#][i][3] // An object of 3 name:float32-value pairs.
+    [i][3][lat][29.976] // Value type is known, so type markers are omitted.
+    [i][4][long][31.131] 
+    [i][3][alt][67.0] 
+// No end marker since a count was specified.</pre>
+<p><a name="optimized-special-cases"></a></p>
+<h2>Special Cases (Null, No-Op and Boolean)</h2>
+<p>Up until now all the examples of leveraging <strong>type</strong> and <strong>count</strong> have illustrated the benefit of optimizing out the markers from <a href="../value-types/index.html">value types</a> that have a data payload (e.g. numeric values, strings, etc.); since the type of all the values are known, the markers are easily omitted. There are, however, a few special value types that have <strong>no data payload</strong> and the markers themselves represent the value, specifically: <a href="../value-types/index.html#null"><em>null</em></a>, <a href="../value-types/index.html#noop"><em>no-op</em></a> and <a href="../value-types/index.html#boolean">boolean</a>.</p>
+<p>This section will take a look at how those types behave when used with strongly-typed containers.</p>
+<p>At a high level, placing these values in a strongly-typed container provides the basic behavior of essentially pre-defining the value for every element in the container. In the case of and <em>array</em>, all the values contained in it. In the case of an <em>object</em>, all the <em>values</em> associated with all the <em>names</em> in the <em>name-value</em> pairs.</p>
+<h3>Array</h3>
+<pre>[[][$][N][#][I][512] // 512 'no-op' values.</pre>
+<p>The example above is a strongly typed <em>array</em> of <strong>type</strong> <em>no-op</em> and with a <strong>count</strong> of 512.</p>
+<p>This simple declaration is equivalent to a <strong>514-byte</strong> <em>array</em> containing 512 [N] markers; instead this single line is <strong>6-bytes</strong> providing a <span style="color: #339966;"><strong>99% size reduction</strong></span>.</p>
+<p>Admittedly this is a selective example of leveraging this feature, but the point is that there are potentially very large performance and size optimizations available if your data can take advantage of this shorthand.</p>
+<div class="woo-sc-box info   ">Strongly-typed arrays of <a href="../value-types/index.html#null"><em>null</em></a>, <a href="../value-types/index.html#noop"><em>no-op</em></a> and <a href="../value-types/index.html#boolean">boolean</a> <strong>must</strong> have an empty body. The header itself defines the container&#8217;s contents.</div>
+<h3>Object</h3>
+<pre>[{][$][Z][#][i][3]
+    [i][4][name] // name only, no value specified.
+    [i][8][password]
+    [i][5][email]</pre>
+<p>The example above is a strongly typed <em>object</em> of <strong>type</strong> <em>null</em> and with a <strong>count</strong> of 3.</p>
+<p>When used in the context of an <em>object</em>, specifying one of these special-case values as a <strong>type</strong> has the effect of setting the default <em>value</em> for every <em>name-value</em> pair in the object; therefore the <em>object</em> only contains the <em>names</em> of all the pairs.</p>
+<p>In the case of <em>object</em>s the space-savings is typically a little less drastic than in the <em>array</em> case depending on the size of the <em>names</em>; in the case of small <em>names</em>, it could be significant, approaching a <span style="color: #339966;"><strong>50% reduction</strong></span>.</p>
+<div class="woo-sc-box info   ">Strongly-typed objects of <a href="../value-types/index.html#null"><em>null</em></a>, <a href="../value-types/index.html#noop"><em>no-op</em></a> and <a href="../value-types/index.html#boolean">boolean</a> <strong>must not</strong> have any <em>values</em> specified in the body, just the <em>name</em> portions of the <em>name-value</em> pairs. The header itself defines the <em>value</em> for every <em>name-value</em> pair.</div>
+<p><a name="optimized-size-perf-benefits"></a></p>
+<h2>Size &amp; Performance Benefits</h2>
+<ul>
+<li><a href="index.html#optimized-size-perf-benefits-parsing"><span style="line-height: 13px;">Optimized for Parsing</span></a></li>
+<li><a href="index.html#optimized-size-perf-benefits-validation">Simple Validation Mechanism</a></li>
+<li><a href="index.html#optimized-size-perf-benefits-size">Reduce Size up to 50%</a></li>
+</ul>
+<p>The benefits realized by leveraging the optimized container types in UBJSON depend heavily on the data being stored and the implementation of the generator or parser. Baring the frustration of &#8220;<em>it depends</em>&#8221; as an answer, the benefits can be viewed at a very high level as the following:<br />
+<a name="optimized-size-perf-benefits-parsing"></a></p>
+<h3>Optimized for Parsing</h3>
+<p>By specifying a <strong>count</strong>, you are hinting to the parser about the number of elements to expect. The performance gains are primarily around allowing the parser to pre-size its internal data structures to exactly the right size to hold pointers to the parsed values.</p>
+<p>By specifying a <strong>type</strong> and <strong>count</strong>, the parser not only knows how many child elements to expect, as well as less data to parse and less conditions to run (no marker checks), but in the cases of fixed-length values, the parser knows the exact <strong>byte length</strong> of the payload!</p>
+<p>For example, consider:</p>
+<pre>[[][$][l][#][I][1024] // 1,024 int32 values
+    [32]
+    [2147483647]
+    [101231]
+    [77832823]
+    ... 1,000 more int32 values ...</pre>
+<p>After the parser parses the container&#8217;s header, it knows the byte length of the entire payload is 4096 and in a single read operation can read all the values in and quickly break them up into their <em><a href="../value-types/index.html#numeric">int32</a></em> representations.</p>
+<p>When you are able to leverage the <b>type</b> and <strong>count</strong> together to help the parser understand the payload in more detail is where the real performance gains come from.<br />
+<a name="optimized-size-perf-benefits-validation"></a></p>
+<h3>Simple Validation Mechanism</h3>
+<p>By specifying a <strong>count</strong> parameter, you are telling the parser the number of child elements it should find in the container. In the case where the parser is unable to find the specified number of child elements it can quickly report a format error to the caller.</p>
+<p>This is a very simple version of verification and not as robust as say a checksum-based approach, but it still provides benefit in addition to a performance gain.<br />
+<a name="optimized-size-perf-benefits-size"></a></p>
+<h3>Reduce Size up to 50%</h3>
+<p>This is a 1-byte-per-value reduction in any container where strong typing is used.</p>
+<p>In the case of containers holding large amounts of fairly compact data (small numbers, chars, small strings or value-types like <em>null</em>), removing the type marker from the beginning of <strong>each</strong> of the values in the container can almost cut the size requirements for the data in half.</p>
+<p>The smaller the containers and bigger the individual values are (large numbers, large strings) the less <strong>size benefit</strong> this optimization will have, but it still provides a potentially significant opportunity to the parser to optimize it&#8217;s code paths for parsing large chunks of same-type <em>values</em> (and not needing to worry about type changes mid-container). This is covered in more detail in the previous section: <em>Optimized for Parsing</em><br />
+<a name="optimized-binary-support"></a></p>
+<h2>Binary Data Support</h2>
+<p>This section is here for referential convenience; please see <a href="../binary-data/index.html">Binary Data</a> for information on storing binary data in UBJSON.</p>
+	</div><!-- /.entry -->
+	<div class="fix"></div>
+</div><!-- /.post -->
+     
+            </div><!-- /#main -->
+                
+            
+		</div><!-- /#main-sidebar-container -->         
+
+		
+    </div><!-- /#content -->
+	
+	<div id="footer" class="col-full">
+	
+		    
+	    
+		<div id="copyright" class="col-left">
+			<p><p>&copy; 2013 The Buzz Media, LLC</p></p>		</div>
+		
+		<div id="credit" class="col-right">
+			<p><p></p></p>		</div>
+		
+	</div><!-- /#footer  -->
+	
+	    
+	
+	</div><!-- /#wrapper -->
+	
+	<div class="fix"></div><!--/.fix-->
+	
+	<script type="text/javascript">
+var clicky_site_ids = clicky_site_ids || [];
+clicky_site_ids.push(66482614);
+(function() {
+  var s = document.createElement('script');
+  s.type = 'text/javascript';
+  s.async = true;
+  s.src = '//static.getclicky.com/js';
+  ( document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0] ).appendChild( s );
+})();
+</script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var wooFeedbackL10n = {"nextButton":"Next \u2192","prevButton":"\u2190 Previous"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='../../wp-content/themes/canvas/includes/js/feedback.js%3Fver=5.0.7'></script>
+		</body>
+</html>
+<!-- Dynamic page generated in 0.331 seconds. -->
+<!-- Cached page generated by WP-Super-Cache on 2014-08-10 14:44:02 -->
