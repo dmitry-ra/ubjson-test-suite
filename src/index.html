@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>UBJSON test page</title>
+        <style type="text/css">
+            textarea { border:1px solid #999999; font-family: monospace; }
+            .result { background-color: #F0F0F0; }
+            .obj { color: #009900; }
+            .key { color: #0000FF; }
+            .ival { color: #FF0000; }
+            .sval { color: #DF00DF; }
+        </style>
+    </head>
+    <body>
+        <div>
+            <textarea id="txt-input">{"answer": 42}</textarea>
+            <button id="btn-convert">Convert</button>
+            <a id="link-binary" download="demo.ubj" href="data:application/ubjson;base64,AQID">Download binary</a>
+        </div>
+        <div class="result">
+            <pre id="disp">?</pre>
+        </div>
+        <script type="text/javascript">
+            var keyupCount = 0;
+            var changeCount = 0;
+            var pasteCount = 0;
+            document.getElementById('btn-convert').onclick=function(){
+                var str = '<span class="obj">[{]</span>\n' + '    ' +
+                    '<span class="key">[i][6][answer]</span><span class="ival">[i][42]</span>\n' +
+                    '<span class="obj">[}]</span>';
+
+                var hello = "привет";
+                var utf8 = unescape(encodeURIComponent(hello));
+                document.getElementById('link-binary').innerHTML = 'UTF-8 size: ' + utf8.length;
+
+
+                document.getElementById('disp').innerHTML = str;
+            }
+            var inp = document.getElementById('txt-input');
+            inp.onkeyup = function(){
+                keyupCount++;
+                document.getElementById('disp').innerHTML = 'onkeyup! ' + keyupCount;
+            }
+            inp.onchange = function(){
+                changeCount++;
+                document.getElementById('disp').innerHTML = 'onchange! ' + changeCount;
+            }
+            inp.onpaste = function(){
+                pasteCount++;
+                document.getElementById('disp').innerHTML = 'onpaste! ' + pasteCount;
+                //TODO: timer?
+                // http://stackoverflow.com/questions/4702814/detecting-a-context-menu-paste-in-the-browser-with-jquery
+            }
+        </script>
+    </body>
+</html>
