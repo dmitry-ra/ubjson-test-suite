@@ -54,8 +54,10 @@
                 }
 
                 if (data.success) {
-                    var block = BlockNotation.create(data.value);
-                    document.getElementById('disp').innerHTML = 'OK! (' + block.value + ')';
+                    //var block = BlockNotation.create(data.value);
+                    var blocks = BlockNotation.getTest();
+                    var text = BlockNotation.render(blocks);
+                    document.getElementById('disp').innerHTML = text;
                 } else {
                     document.getElementById('disp').innerHTML = 'ERR: ' + data.error;
                 }
