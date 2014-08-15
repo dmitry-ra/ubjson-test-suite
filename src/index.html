@@ -44,22 +44,21 @@
             }
             function updateData(jsonText)
             {
-                var data = {};
+                var parseResult = {};
                 try {
-                    data.value = JSON.parse(jsonText);
-                    data.success = true;
+                    var value = JSON.parse(jsonText);                    
+                    parseResult.items = UbjsonTestSuiteCore.serialize(value);
+                    parseResult.success = true;
                 } catch(error) {
-                    data.success = false;
-                    data.error = error;
+                    parseResult.success = false;
+                    parseResult.error = error;
                 }
 
-                if (data.success) {
-                    //var block = BlockNotation.create(data.value);
-                    var blocks = BlockNotation.getTest();
-                    var text = BlockNotation.render(blocks);
+                if (parseResult.success) {                    
+                    var text = UbjsonTestSuiteCore.render(parseResult.items);
                     document.getElementById('disp').innerHTML = text;
                 } else {
-                    document.getElementById('disp').innerHTML = 'ERR: ' + data.error;
+                    document.getElementById('disp').innerHTML = parseResult.error;
                 }
             }
 

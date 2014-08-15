@@ -1,73 +1,128 @@
-﻿var BlockNotation = (function (notation) {
+﻿var UbjsonTestSuiteCore = (function (core) {
+//------------------------------------------------------------------------------
+    var types = {
+        Null: 'Z',
+        Noop: 'N',
+        True: 'T',
+        False: 'F',
+        Int8: 'i',
+        UInt8: 'U',
+        Int16: 'I',
+        Int32: 'l',
+        Int64: 'L',
+        Float32: 'd',
+        Float64: 'D',
+        HighNumber: 'H',
+        Char: 'C',
+        String: 'S',
+        ArrayBegin: '[',
+        ArrayEnd: ']',
+        ObjectBegin: '{',
+        ObjectEnd: '}',
+        Type: '$',
+        Count: '#'
+    };
+    core.Types = types;
 
-    var types = {};
-    types.Null = 'Z';
-    types.Noop = 'N';
-    types.True = 'T';
-    types.False = 'F';
-    types.Int8 = 'i';
-    types.UInt8 = 'U';
-    types.Int16 = 'I';
-    types.Int32 = 'l';
-    types.Int64 = 'L';
-    types.Float32 = 'd';
-    types.Float64 = 'D';
-    types.HighNumber = 'H';
-    types.Char = 'C';
-    types.String = 'S';
-    types.ArrayBegin = '[';
-    types.ArrayEnd = ']';
-    types.ObjectBegin = '{';
-    types.ObjectEnd = '}';
-    types.Type = '$';
-    types.Count = '#';
-    notation.Types = types;
+    var semantics = {
+        Markup: 1,
+        Key: 2,
+        Value: 3,
+        Parameter: 4
+    };
+    core.BlockSemantics = semantics;
 
-    var semantics = {};
-    semantics.Markup = 1;
-    semantics.Key = 2;
-    semantics.Value = 3;
-    semantics.Parameter = 4;
-    notation.BlockSemantics = semantics;
-    
-    function createBlock(tag, semantic, type, value) {
-        return {
-            tag: tag,
-            semantic: semantic,
-            type: type,
-            value: value
-        };        
+//------------------------------------------------------------------------------
+
+    function BlockItem() {
     }
-    
-    notation.serialize = function(data) {
+
+    BlockItem.prototype.toString = function() {
+        return 'tag: ' + this.tag + ', type: ' + this.type;
+    }
+
+    //core.BlockItem = BlockItem;
+
+    DataItem.prototype = new BlockItem();
+    DataItem.prototype.constructor = DataItem;
+
+    function DataItem(semantic, type, value) {
+        this.tag = false;
+        this.semantic = semantic;
+        this.type = type;
+        this.value = value;
+    }
+
+    //core.DataItem = DataItem;
+
+    TagItem.prototype = new BlockItem();
+    TagItem.prototype.constructor = TagItem;
+
+    function TagItem(semantic, type) {
+        this.tag = true;
+        this.semantic = semantic;
+        this.type = type;
+    }
+
+    //core.TagItem = TagItem;
+
+//------------------------------------------------------------------------------
+
+    //function serializeArray() {
+    //}
+    //
+    //function serializeObject() {
+    //
+    //}
+    //
+    //function serializeEntity(items, entity) {
+    //    if (entity instanceof Object) {
+    //        if (entity instanceof Array) {
+    //            serializeArray(items, entity)
+    //        } else {
+    //        
+    //        }
+    //    } else {
+    //    
+    //    }
+    //}  
+
+    core.serialize = function(data) {
+        
+        //var s = new Serializer()
+        //s.load(data);
+        //return s.items;
+        
+        return core.getTest();
+        
+        var items = [];        
+        if (data instanceof Object) {
+            if (data instanceof Array) {
+                
+            } else {
+                
+            }
+        } else {
+            throw new Error("Root object must be an Array or Object");
+        }        
+        return items;
+    };
+
+    core.getTest = function() {
         var blocks = [];
 
-        //is object
-        //is array
-        //is integer
-        //is float
-        //is string
+        blocks.push(new TagItem(semantics.Markup, types.ObjectBegin));
+        blocks.push(new TagItem(semantics.Key, types.Int8));
+        blocks.push(new DataItem(semantics.Key, types.Int8, 6));
+        blocks.push(new DataItem(semantics.Key, types.String, 'answer'));
+        blocks.push(new TagItem(semantics.Value, types.Int8));
+        blocks.push(new DataItem(semantics.Value, types.Int8, 42));
+        blocks.push(new TagItem(semantics.Markup, types.ObjectEnd));
 
         return blocks;
     };
 
-    notation.getTest = function() {
-        var blocks = [];
-
-        //[{][i][6][answer][i][42][}]
-
-        blocks.push(createBlock(true, semantics.Markup, types.ObjectBegin));
-        blocks.push(createBlock(true, semantics.Key, types.Int8));
-        blocks.push(createBlock(false, semantics.Key, types.Int8, 6));
-        blocks.push(createBlock(false, semantics.Key, types.String, 'answer'));
-        blocks.push(createBlock(true, semantics.Value, types.Int8));
-        blocks.push(createBlock(false, semantics.Value, types.Int8, 42));
-        blocks.push(createBlock(true, semantics.Markup, types.ObjectEnd));
-
-        return blocks;
-    };
-
-    notation.render = function(blocks) {
+    core.render = function(blocks) {
         var text = '';
         var count = blocks.length;
         for (var i = 0; i < count; i++) {
@@ -87,5 +142,5 @@
         return text;
     };
 
-    return notation;
-}(BlockNotation || {}));
+    return core;
+}(UbjsonTestSuiteCore || {}));
