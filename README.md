@@ -1,6 +1,7 @@
-ubjson-js-tests
-===============
+**What is it?**
 
-##WORK IN PROGRESS
+Mirror of the official site [http://ubjson.org/](http://ubjson.org/).
 
-JavaScript parsing test of UBJSON.
+**Why?**
+
+Trying to track changes.
