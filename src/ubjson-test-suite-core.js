@@ -95,6 +95,8 @@ var UbjsonTestSuiteCore = (function (core) {
     function BlockItem() {
     }
 
+    BlockItem.prototype.displayValue = null;
+
     BlockItem.prototype.toString = function() {
         return 'semantic: ' + this.semantic + ', type: ' + this.type;
     }
@@ -194,7 +196,7 @@ var UbjsonTestSuiteCore = (function (core) {
             var ch = string.charCodeAt(0);
             if (ch < 128) {
                 this.addTagItem(Types.Char);
-                this.addDataItem(Types.Char, ch);
+                this.addDataItem(Types.Char, ch).displayValue = string;
                 return;
             }
         }
@@ -205,7 +207,7 @@ var UbjsonTestSuiteCore = (function (core) {
         }
         this.serializeNumber(size);
         if (size > 0) {
-            this.addDataItem(Types.String, utf8value);
+            this.addDataItem(Types.String, utf8value).displayValue = string;
         }
     }
 
@@ -224,11 +226,15 @@ var UbjsonTestSuiteCore = (function (core) {
     }
 
     ObjectSerializer.prototype.addTagItem = function(type) {
-        this.items.push(new TagItem(this.currentSemantic, type));
+        var item = new TagItem(this.currentSemantic, type);
+        this.items.push(item);
+        return item;
     }
 
     ObjectSerializer.prototype.addDataItem = function(type, value) {
-        this.items.push(new DataItem(this.currentSemantic, type, value));
+        var item = new DataItem(this.currentSemantic, type, value);
+        this.items.push(item);
+        return item;
     }
 
     ObjectSerializer.prototype.setCurrentSemantic = function(semantic) {
@@ -300,11 +306,12 @@ var UbjsonTestSuiteCore = (function (core) {
     }
 
     BlocksTextRenderer.prototype.renderDataBlock = function(block) {
+        var value = (block.displayValue != null) ? block.displayValue : block.value;
         if (this.highlight) {
             var style = this.getStyle(block);
-            return '<span style="' + style + '">[' + block.value + ']</span>';
+            return '<span style="' + style + '">[' + value + ']</span>';
         } else {
-            return '[' + block.value + ']';
+            return '[' + value + ']';
         }
     }
 
