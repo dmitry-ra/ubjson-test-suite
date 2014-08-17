@@ -1,0 +1,113 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>JSON to UBJSON converter [pre-alpha]</title>
+        <style type="text/css">
+            .back-green { background-color: #90FF90; }
+            .back-red { background-color: #FF9090; }
+            hr { margin:0px; padding:0px; border-bottom:1px dashed #777;
+                border-top:0px; border-left:0px; border-right:0px;
+                line-height:0px; height:1px; display:block;
+            }
+            textarea { border:1px solid #999999; width: 90%; min-height: 150px; font-family: monospace; }
+            .result { background-color: #F0F0F0; width: 90%; }
+            .status-line { width: 90%; font-family: monospace; }
+            .control-panel { width: 90%; font-weight: bold; }
+        </style>
+        <script type="text/javascript" src="ubjson-test-suite-core.js"></script>
+    </head>
+    <body>
+        <div class="control-panel">
+            <input id="checkbox-highlight" name="highlight" type="checkbox" value="highlight" checked>
+            <label for="checkbox-highlight">Use highlighting</label>
+            <input id="checkbox-formalized" name="formalized" type="checkbox" value="formalized">
+            <label for="checkbox-formalized">Use formalized syntax</label>
+
+        </div>
+        <div>
+            <textarea id="txt-input" spellcheck="false"></textarea>
+        </div>
+        <div class="status-line">
+        <span id="json-status" class="back-green">&nbsp;</span>
+        </div>
+        <div class="result">
+            <pre id="disp">&nbsp;</pre>
+        </div>
+        <!-- <a id="link-binary" download="demo.ubj" href="data:application/ubjson;base64,">Download binary</a> -->
+        <hr>
+        Current specification: <a href="http://ubjson.org/" target="_blank">http://ubjson.org/</a>
+        <script type="text/javascript">
+            var inpValue = null;
+            var onTextChange = function(){
+                refreshData(false);
+            }
+            var forcedRefresh = function(){
+                refreshData(true);
+            }
+            function refreshData(forced) {
+                var val = document.getElementById('txt-input').value;
+                if (forced || inpValue !== val) {
+                    inpValue = val;
+                    updateData(val);
+                }
+            }
+            function setOK(id, green) {
+                var added = green ? 'back-green' : 'back-red';
+                var removed = green ? 'back-red' : 'back-green';
+                var rex = new RegExp('\\b' + removed + '\\b');
+                var element = document.getElementById(id);
+                element.className = element.className.replace(rex, added);
+            }
+            function updateData(jsonText)
+            {
+                var parseResult = {};
+                try {
+                    var value = JSON.parse(jsonText);
+                    var serializer = new UbjsonTestSuiteCore.ObjectSerializer();
+                    parseResult.items = serializer.serialize(value);
+                    parseResult.success = true;
+                } catch(error) {
+                    parseResult.success = false;
+                    parseResult.error = error;
+                }
+
+                if (parseResult.success) {
+                    setOK('json-status', true);
+                    document.getElementById('json-status').innerHTML = 'OK';
+                    var renderer = new UbjsonTestSuiteCore.BlocksTextRenderer();
+                    renderer.highlight = document.getElementById('checkbox-highlight').checked;
+                    renderer.formalized = document.getElementById('checkbox-formalized').checked;
+                    document.getElementById('disp').innerHTML = renderer.render(parseResult.items);
+                } else {
+                    setOK('json-status', false);
+                    document.getElementById('json-status').innerHTML = parseResult.error;
+                }
+            }
+            var inp = document.getElementById('txt-input');
+            inp.onkeyup = onTextChange;
+            inp.onchange = onTextChange;
+            inp.onpaste = function(){
+                setTimeout(function(){
+                    onTextChange();
+                }, 0);
+            }
+
+            document.getElementById('checkbox-highlight').onchange = forcedRefresh;
+            document.getElementById('checkbox-formalized').onchange = forcedRefresh;
+
+            window.onload = function() {
+                var hash = window.location.hash;
+                if (hash) {
+                    if (hash[0] == '#') {
+                        hash = hash.substring(1);
+                    }
+                    document.getElementById('txt-input').value = hash;
+                } else {
+                    document.getElementById('txt-input').value = '{\n    "answer": 42\n}';
+                }
+                forcedRefresh();
+            }
+        </script>
+    </body>
+</html>
