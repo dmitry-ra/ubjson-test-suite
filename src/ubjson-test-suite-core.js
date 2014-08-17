@@ -26,7 +26,6 @@ var UbjsonTestSuiteCore = (function (core) {
         Type: '$',
         Count: '#'
     };
-    core.Types = Types;
 
     var MinInt8 = -128;
     var MaxInt8 = 127;
@@ -47,9 +46,10 @@ var UbjsonTestSuiteCore = (function (core) {
         Markup: 1,
         Key: 2,
         Value: 3,
-        ArrayItem: 4
+        ArrayItem: 4,
+        LowValuesMask: 0xFF,
+        LastArrayItemFlag: 0x100
     };
-    core.BlockSemantics = Semantics;
 
 //------------------------------------------------------------------------------
 
@@ -169,7 +169,7 @@ var UbjsonTestSuiteCore = (function (core) {
         for(var i = 0; i < count; i++) {
             this.setCurrentSemantic(Semantics.ArrayItem);
             this.serializeEntity(array[i]);
-            this.items[this.items.length - 1].arrayItemTerminator = true;
+            this.items[this.items.length - 1].semantic |= Semantics.LastArrayItemFlag;
         }
         this.setCurrentSemantic(Semantics.Markup);
         this.addTagItem(Types.ArrayEnd);
@@ -250,7 +250,8 @@ var UbjsonTestSuiteCore = (function (core) {
         this.styles = {
                 markup: "color: green;",
                 key: "color: blue",
-                value: "color: red"
+                value: "color: red",
+                arrayItem: "color: orange"
             };
     }
 
@@ -269,10 +270,12 @@ var UbjsonTestSuiteCore = (function (core) {
                     startNewLine = prevBlock != null && prevBlock.type != Types.ObjectBegin && prevBlock.type != Types.ArrayBegin;
                 }
                 if (prevBlock != null) {
-                    if (prevBlock.arrayItemTerminator) {
+                    if ((prevBlock.semantic & Semantics.LastArrayItemFlag) == Semantics.LastArrayItemFlag) {
                         startNewLine = true;
                     }
-                    if (prevBlock.semantic == Semantics.Value && block.semantic == Semantics.Key) {
+                    var prevBlockSemantic = prevBlock.semantic & Semantics.LowValuesMask;
+                    var blockSemantic = block.semantic & Semantics.LowValuesMask;
+                    if (prevBlockSemantic == Semantics.Value && blockSemantic == Semantics.Key) {
                         startNewLine = true;
                     }
                     if (prevBlock.type == Types.ObjectEnd || prevBlock.type == Types.ArrayEnd) {
@@ -316,14 +319,15 @@ var UbjsonTestSuiteCore = (function (core) {
     }
 
     BlocksTextRenderer.prototype.getStyle = function(block) {
-        switch(block.semantic) {
+        switch(block.semantic & Semantics.LowValuesMask) {
             case Semantics.Markup:
                 return this.styles.markup;
             case Semantics.Key:
                 return this.styles.key;
             case Semantics.Value:
-            case Semantics.ArrayItem:
                 return this.styles.value;
+            case Semantics.ArrayItem:
+                return this.styles.arrayItem;
         }
     }
 
