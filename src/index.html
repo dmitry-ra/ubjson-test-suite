@@ -4,17 +4,23 @@
         <meta charset="utf-8">
         <title>UBJSON test page</title>
         <style type="text/css">
-            textarea { border:1px solid #999999; font-family: monospace; }
-            .result { background-color: #F0F0F0; }
+            .back-green { background-color: #90FF90; }
+            .back-red { background-color: #FF9090; }
+            textarea { border:1px solid #999999; width: 90%; min-height: 150px; font-family: monospace; }
+            .result { background-color: #F0F0F0; width: 90%; }
+            .status-line { width: 90%; font-family: monospace; }
         </style>
         <script type="text/javascript" src="ubjson-test-suite-core.js"></script>
     </head>
     <body>
         <div>
-            <textarea id="txt-input">{"answer": 42}</textarea>
+            <textarea id="txt-input" spellcheck="false">{"answer": 42}</textarea>
+        </div>
+        <div class="status-line">
+        <span id="json-status" class="back-green">&nbsp;</span>
         </div>
         <div class="result">
-            <pre id="disp">?</pre>
+            <pre id="disp">&nbsp;</pre>
         </div>
         <a id="link-binary" download="demo.ubj" href="data:application/ubjson;base64,">Download binary</a>
         <script type="text/javascript">
@@ -25,6 +31,13 @@
                     inpValue = val;
                     updateData(val);
                 }
+            }
+            function setOK(id, green) {
+                var added = green ? 'back-green' : 'back-red';
+                var removed = green ? 'back-red' : 'back-green';
+                var rex = new RegExp('\\b' + removed + '\\b');
+                var element = document.getElementById(id);
+                element.className = element.className.replace(rex, added);
             }
             window.onload = onTextChange;
             function updateData(jsonText)
@@ -41,9 +54,12 @@
 
                 if (parseResult.success) {
                     var text = UbjsonTestSuiteCore.render(parseResult.items);
+                    setOK('json-status', true);
+                    document.getElementById('json-status').innerHTML = 'OK';
                     document.getElementById('disp').innerHTML = text;
                 } else {
-                    //document.getElementById('disp').innerHTML = parseResult.error;
+                    setOK('json-status', false);
+                    document.getElementById('json-status').innerHTML = parseResult.error;
                 }
             }
 
