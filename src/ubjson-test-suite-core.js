@@ -337,15 +337,9 @@ var UbjsonTestSuiteCore = (function (core) {
 
 //------------------------------------------------------------------------------
 
-    core.serialize = function(rootObject) {
-        var serializer = new ObjectSerializer();
-        return serializer.serialize(rootObject);
-    }
-
-    core.render = function(items) {
-        var renderer = new BlocksTextRenderer();
-        return renderer.render(items);
-    };
+    core.ObjectSerializer = ObjectSerializer;
+    core.BlocksTextRenderer = BlocksTextRenderer;
 
     return core;
+
 }(UbjsonTestSuiteCore || {}));

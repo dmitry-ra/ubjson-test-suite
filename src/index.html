@@ -9,12 +9,17 @@
             textarea { border:1px solid #999999; width: 90%; min-height: 150px; font-family: monospace; }
             .result { background-color: #F0F0F0; width: 90%; }
             .status-line { width: 90%; font-family: monospace; }
+            .control-panel { width: 90%; font-weight: bold; }
         </style>
         <script type="text/javascript" src="ubjson-test-suite-core.js"></script>
     </head>
     <body>
+        <div class="control-panel">
+            <input id="checkbox-highlight" name="highlight" type="checkbox" value="highlight" checked="true">
+            <label for="checkbox-highlight">Use highlighting</label>
+        </div>
         <div>
-            <textarea id="txt-input" spellcheck="false">{"answer": 42}</textarea>
+            <textarea id="txt-input" spellcheck="false">{ "answer": 42 }</textarea>
         </div>
         <div class="status-line">
         <span id="json-status" class="back-green">&nbsp;</span>
@@ -26,8 +31,11 @@
         <script type="text/javascript">
             var inpValue = null;
             var onTextChange = function(){
+                refreshData(false);
+            }
+            function refreshData(forced) {
                 var val = document.getElementById('txt-input').value;
-                if (inpValue !== val) {
+                if (forced || inpValue !== val) {
                     inpValue = val;
                     updateData(val);
                 }
@@ -39,13 +47,13 @@
                 var element = document.getElementById(id);
                 element.className = element.className.replace(rex, added);
             }
-            window.onload = onTextChange;
             function updateData(jsonText)
             {
                 var parseResult = {};
                 try {
                     var value = JSON.parse(jsonText);
-                    parseResult.items = UbjsonTestSuiteCore.serialize(value);
+                    var serializer = new UbjsonTestSuiteCore.ObjectSerializer();
+                    parseResult.items = serializer.serialize(value);
                     parseResult.success = true;
                 } catch(error) {
                     parseResult.success = false;
@@ -53,24 +61,30 @@
                 }
 
                 if (parseResult.success) {
-                    var text = UbjsonTestSuiteCore.render(parseResult.items);
                     setOK('json-status', true);
                     document.getElementById('json-status').innerHTML = 'OK';
-                    document.getElementById('disp').innerHTML = text;
+                    var renderer = new UbjsonTestSuiteCore.BlocksTextRenderer();
+                    renderer.highlight = document.getElementById('checkbox-highlight').checked;
+                    document.getElementById('disp').innerHTML = renderer.render(parseResult.items);
                 } else {
                     setOK('json-status', false);
                     document.getElementById('json-status').innerHTML = parseResult.error;
                 }
             }
-
             var inp = document.getElementById('txt-input');
             inp.onkeyup = onTextChange;
             inp.onchange = onTextChange;
+            window.onload = onTextChange;
             inp.onpaste = function(){
                 setTimeout(function(){
                     onTextChange();
                 }, 0);
             }
+
+            document.getElementById('checkbox-highlight').onchange = function() {
+                refreshData(true);
+            }
+
         </script>
     </body>
 </html>
