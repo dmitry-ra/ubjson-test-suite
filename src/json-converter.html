@@ -6,6 +6,10 @@
         <style type="text/css">
             .back-green { background-color: #90FF90; }
             .back-red { background-color: #FF9090; }
+            hr { margin:0px; padding:0px; border-bottom:1px dashed #777;
+                border-top:0px; border-left:0px; border-right:0px;
+                line-height:0px; height:1px; display:block;
+            }
             textarea { border:1px solid #999999; width: 90%; min-height: 150px; font-family: monospace; }
             .result { background-color: #F0F0F0; width: 90%; }
             .status-line { width: 90%; font-family: monospace; }
@@ -31,6 +35,8 @@
             <pre id="disp">&nbsp;</pre>
         </div>
         <!-- <a id="link-binary" download="demo.ubj" href="data:application/ubjson;base64,">Download binary</a> -->
+        <hr>
+        Current specification: <a href="http://ubjson.org/" target="_blank">http://ubjson.org/</a>
         <script type="text/javascript">
             var inpValue = null;
             var onTextChange = function(){
