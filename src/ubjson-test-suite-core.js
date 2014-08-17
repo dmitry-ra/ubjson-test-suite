@@ -1,6 +1,10 @@
-﻿var UbjsonTestSuiteCore = (function (core) {
+﻿'use strict';
+
+var UbjsonTestSuiteCore = (function (core) {
+
 //------------------------------------------------------------------------------
-    var types = {
+
+    var Types = {
         Null: 'Z',
         Noop: 'N',
         True: 'T',
@@ -22,15 +26,69 @@
         Type: '$',
         Count: '#'
     };
-    core.Types = types;
+    core.Types = Types;
 
-    var semantics = {
+    var MinInt8 = -128;
+    var MaxInt8 = 127;
+    var MinUInt8 = 0;
+    var MaxUInt8 = 255;
+    var MinInt16 = -32768;
+    var MaxInt16 = 32767;
+    var MinInt32 = -2147483648;
+    var MaxInt32 = 2147483647;
+    var MinInt64 = -9223372036854775808;
+    var MaxInt64 = 9223372036854775807;
+    var MinFloat32 = -3.402823e38;
+    var MaxFloat32 = 3.402823e+38;
+    var MinFloat64 = -1.7976931348623157E+308;
+    var MaxFloat64 = 1.7976931348623157E+308;
+
+    var Semantics = {
         Markup: 1,
         Key: 2,
         Value: 3,
-        Parameter: 4
+        ArrayItem: 4
     };
-    core.BlockSemantics = semantics;
+    core.BlockSemantics = Semantics;
+
+//------------------------------------------------------------------------------
+
+    function utf8encode(string) {
+        return unescape(encodeURIComponent(string));
+    }
+
+    function isInteger(number) {
+        return isFinite(number) &&
+            number > -9007199254740992 &&
+            number < 9007199254740992 &&
+            Math.floor(number) === number;
+    };
+
+    function findSuitableNumericType(number) {
+        if (isInteger(number)) {
+            if (number >= MinInt8 && number <= MaxInt8)
+                return Types.Int8;
+
+            if (number >= MinUInt8 && number <= MaxUInt8)
+                return Types.UInt8;
+
+            if (number >= MinInt16 && number <= MaxInt16)
+                return Types.Int16;
+
+            if (number >= MinInt32 && number <= MaxInt32)
+                return Types.Int32;
+
+            if (number >= MinInt64 && number <= MaxInt64)
+                return Types.Int64;
+        } else {
+            if (number >= MinFloat32 && number <= MaxFloat32)
+                return Types.Float32;
+
+            if (number >= MinFloat64 && number <= MaxFloat64)
+                return Types.Float64;
+        }
+        return Types.HighNumber;
+    }
 
 //------------------------------------------------------------------------------
 
@@ -38,108 +96,238 @@
     }
 
     BlockItem.prototype.toString = function() {
-        return 'tag: ' + this.tag + ', type: ' + this.type;
+        return 'semantic: ' + this.semantic + ', type: ' + this.type;
     }
 
-    //core.BlockItem = BlockItem;
-
-    DataItem.prototype = new BlockItem();
-    DataItem.prototype.constructor = DataItem;
-
     function DataItem(semantic, type, value) {
-        this.tag = false;
         this.semantic = semantic;
         this.type = type;
         this.value = value;
     }
 
-    //core.DataItem = DataItem;
-
-    TagItem.prototype = new BlockItem();
-    TagItem.prototype.constructor = TagItem;
+    DataItem.prototype = new BlockItem();
+    DataItem.prototype.constructor = DataItem;
 
     function TagItem(semantic, type) {
-        this.tag = true;
         this.semantic = semantic;
         this.type = type;
     }
 
-    //core.TagItem = TagItem;
+    TagItem.prototype = new BlockItem();
+    TagItem.prototype.constructor = TagItem;
 
 //------------------------------------------------------------------------------
 
-    //function serializeArray() {
-    //}
-    //
-    //function serializeObject() {
-    //
-    //}
-    //
-    //function serializeEntity(items, entity) {
-    //    if (entity instanceof Object) {
-    //        if (entity instanceof Array) {
-    //            serializeArray(items, entity)
-    //        } else {
-    //        
-    //        }
-    //    } else {
-    //    
-    //    }
-    //}  
+    function ObjectSerializer() {
+        this.items = [];
+        this.currentSemantic = Semantics.Markup;
+    }
 
-    core.serialize = function(data) {
-        
-        //var s = new Serializer()
-        //s.load(data);
-        //return s.items;
-        
-        return core.getTest();
-        
-        var items = [];        
-        if (data instanceof Object) {
-            if (data instanceof Array) {
-                
-            } else {
-                
-            }
+    ObjectSerializer.prototype.serialize = function(rootObject) {
+        this.items = [];
+        if (rootObject instanceof Object) {
+            this.serializeEntity(rootObject);
         } else {
-            throw new Error("Root object must be an Array or Object");
-        }        
-        return items;
-    };
+            throw new Error('Root object must be an Array or Object instance');
+        }
+        return this.items;
+    }
 
-    core.getTest = function() {
-        var blocks = [];
-
-        blocks.push(new TagItem(semantics.Markup, types.ObjectBegin));
-        blocks.push(new TagItem(semantics.Key, types.Int8));
-        blocks.push(new DataItem(semantics.Key, types.Int8, 6));
-        blocks.push(new DataItem(semantics.Key, types.String, 'answer'));
-        blocks.push(new TagItem(semantics.Value, types.Int8));
-        blocks.push(new DataItem(semantics.Value, types.Int8, 42));
-        blocks.push(new TagItem(semantics.Markup, types.ObjectEnd));
-
-        return blocks;
-    };
-
-    core.render = function(blocks) {
-        var text = '';
-        var count = blocks.length;
-        for (var i = 0; i < count; i++) {
-            var block = blocks[i];
-            if (block.tag) {
-                if (block.type == types.ObjectEnd || block.type == types.ArrayEnd) {
-                    text += '\n';
+    ObjectSerializer.prototype.serializeEntity = function(entity) {
+        if (entity == null) {
+            this.addTagItem(Types.Null);
+            return;
+        }
+        switch(typeof(entity)) {
+            case 'object':
+                if (entity instanceof Array) {
+                    this.serializeArray(entity);
+                } else {
+                    this.serializeObject(entity);
                 }
-                text += '[' + block.type + ']';
-                if (block.type == types.ObjectBegin || block.type == types.ArrayBegin) {
-                    text += '\n';
+                break;
+            case 'string':
+                this.addTagItem(Types.String);
+                this.serializeString(entity);
+                break;
+            case 'number':
+                this.serializeNumber(entity);
+                break;
+            case 'boolean':
+                this.serializeBoolean(entity);
+                break;
+            default:
+                throw new Error('Unknown type "' + typeof(entity) + '"');
+        }
+    }
+
+    ObjectSerializer.prototype.serializeArray = function(array) {
+        this.setCurrentSemantic(Semantics.Markup);
+        this.addTagItem(Types.ArrayBegin);
+        var count = array.length;
+        for(var i = 0; i < count; i++) {
+            this.setCurrentSemantic(Semantics.ArrayItem);
+            this.serializeEntity(array[i]);
+            this.items[this.items.length - 1].arrayItemTerminator = true;
+        }
+        this.setCurrentSemantic(Semantics.Markup);
+        this.addTagItem(Types.ArrayEnd);
+    }
+
+    ObjectSerializer.prototype.serializeObject = function(object) {
+        this.setCurrentSemantic(Semantics.Markup);
+        this.addTagItem(Types.ObjectBegin);
+        var keys = Object.keys(object);
+        var count = keys.length;
+        for(var i = 0; i < count; i++) {
+            var key = keys[i];
+            this.setCurrentSemantic(Semantics.Key);
+            this.serializeString(key);
+            this.setCurrentSemantic(Semantics.Value);
+            this.serializeEntity(object[key]);
+        }
+        this.setCurrentSemantic(Semantics.Markup);
+        this.addTagItem(Types.ObjectEnd);
+    }
+
+    ObjectSerializer.prototype.serializeString = function(string) {
+        var utf8value = utf8encode(string);
+        var size = utf8value.length;
+        this.serializeNumber(size);
+        if (size > 0) {
+            this.addDataItem(Types.String, utf8value);
+        }
+    }
+
+    ObjectSerializer.prototype.serializeNumber = function(number) {
+        var type = findSuitableNumericType(number);
+        this.addTagItem(type);
+        this.addDataItem(type, number);
+    }
+
+    ObjectSerializer.prototype.serializeBoolean = function(bool) {
+        if (bool) {
+            this.addTagItem(Types.True);
+        } else {
+            this.addTagItem(Types.False);
+        }
+    }
+
+    ObjectSerializer.prototype.addTagItem = function(type) {
+        this.items.push(new TagItem(this.currentSemantic, type));
+    }
+
+    ObjectSerializer.prototype.addDataItem = function(type, value) {
+        this.items.push(new DataItem(this.currentSemantic, type, value));
+    }
+
+    ObjectSerializer.prototype.setCurrentSemantic = function(semantic) {
+        this.currentSemantic = semantic;
+    }
+
+//------------------------------------------------------------------------------
+
+    function BlocksTextRenderer() {
+        this.indentStep = '    ';
+        this.formalized = false;
+        this.highlight = true;
+        this.styles = {
+                markup: "color: green;",
+                key: "color: blue",
+                value: "color: red"
+            };
+    }
+
+    BlocksTextRenderer.prototype.render = function(items) {
+        var text = '';
+        var indent = '';
+        var nestingLevel = 0;
+        var prevBlock = null;
+        var count = items.length;
+        var startNewLine = false;
+        for (var i = 0; i < count; i++) {
+            var block = items[i];
+            if (block instanceof TagItem) {
+                if (block.type == Types.ObjectEnd || block.type == Types.ArrayEnd) {
+                    indent = this.getIndent(--nestingLevel);
+                    startNewLine = prevBlock != null && prevBlock.type != Types.ObjectBegin && prevBlock.type != Types.ArrayBegin;
+                }
+                if (prevBlock != null) {
+                    if (prevBlock.arrayItemTerminator) {
+                        startNewLine = true;
+                    }
+                    if (prevBlock.semantic == Semantics.Value && block.semantic == Semantics.Key) {
+                        startNewLine = true;
+                    }
+                    if (prevBlock.type == Types.ObjectEnd || prevBlock.type == Types.ArrayEnd) {
+                        startNewLine = true;
+                    }
+                }
+                if (startNewLine) {
+                    text += '\n' + indent;
+                    startNewLine = false;
+                }
+                text += this.renderTagBlock(block);
+                if (block.type == Types.ObjectBegin || block.type == Types.ArrayBegin) {
+                    indent = this.getIndent(++nestingLevel);
+                    startNewLine = true;
                 }
             } else {
-                text += '[' + block.value + ']';
+                text += this.renderDataBlock(block);
             }
+            prevBlock = block;
         }
         return text;
+    }
+
+    BlocksTextRenderer.prototype.renderTagBlock = function(block) {
+        if (this.highlight) {
+            var style = this.getStyle(block);
+            return '<span style="' + style + '">[' + block.type + ']</span>';
+        } else {
+            return '[' + block.type + ']';
+        }
+    }
+
+    BlocksTextRenderer.prototype.renderDataBlock = function(block) {
+        if (this.highlight) {
+            var style = this.getStyle(block);
+            return '<span style="' + style + '">[' + block.value + ']</span>';
+        } else {
+            return '[' + block.value + ']';
+        }
+    }
+
+    BlocksTextRenderer.prototype.getStyle = function(block) {
+        switch(block.semantic) {
+            case Semantics.Markup:
+                return this.styles.markup;
+            case Semantics.Key:
+                return this.styles.key;
+            case Semantics.Value:
+            case Semantics.ArrayItem:
+                return this.styles.value;
+        }
+    }
+
+    BlocksTextRenderer.prototype.getIndent = function(nestingLevel) {
+        if (nestingLevel > 0) {
+            return Array(nestingLevel + 1).join(this.indentStep);
+        } else {
+            return '';
+        }
+    }
+
+//------------------------------------------------------------------------------
+
+    core.serialize = function(rootObject) {
+        var serializer = new ObjectSerializer();
+        return serializer.serialize(rootObject);
+    }
+
+    core.render = function(items) {
+        var renderer = new BlocksTextRenderer();
+        return renderer.render(items);
     };
 
     return core;

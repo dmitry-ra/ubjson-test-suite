@@ -6,10 +6,6 @@
         <style type="text/css">
             textarea { border:1px solid #999999; font-family: monospace; }
             .result { background-color: #F0F0F0; }
-            .obj { color: #009900; }
-            .key { color: #0000FF; }
-            .ival { color: #FF0000; }
-            .sval { color: #DF00DF; }
         </style>
         <script type="text/javascript" src="ubjson-test-suite-core.js"></script>
     </head>
@@ -23,18 +19,6 @@
         <a id="link-binary" download="demo.ubj" href="data:application/ubjson;base64,">Download binary</a>
         <script type="text/javascript">
             var inpValue = null;
-
-            // var hello = "привет";
-            // var utf8 = unescape(encodeURIComponent(hello));
-            // document.getElementById('link-binary').innerHTML = 'UTF-8 size: ' + utf8.length;
-            // document.getElementById('disp').innerHTML = str;
-
-            window.onload = function(){
-                var str = '<span class="obj">[{]</span>\n' + '    ' +
-                    '<span class="key">[i][6][answer]</span><span class="ival">[i][42]</span>\n' +
-                    '<span class="obj">[}]</span>';
-                document.getElementById('disp').innerHTML = str;
-            }
             var onTextChange = function(){
                 var val = document.getElementById('txt-input').value;
                 if (inpValue !== val) {
@@ -42,11 +26,12 @@
                     updateData(val);
                 }
             }
+            window.onload = onTextChange;
             function updateData(jsonText)
             {
                 var parseResult = {};
                 try {
-                    var value = JSON.parse(jsonText);                    
+                    var value = JSON.parse(jsonText);
                     parseResult.items = UbjsonTestSuiteCore.serialize(value);
                     parseResult.success = true;
                 } catch(error) {
@@ -54,11 +39,11 @@
                     parseResult.error = error;
                 }
 
-                if (parseResult.success) {                    
+                if (parseResult.success) {
                     var text = UbjsonTestSuiteCore.render(parseResult.items);
                     document.getElementById('disp').innerHTML = text;
                 } else {
-                    document.getElementById('disp').innerHTML = parseResult.error;
+                    //document.getElementById('disp').innerHTML = parseResult.error;
                 }
             }
 
