@@ -22,7 +22,7 @@
 
         </div>
         <div>
-            <textarea id="txt-input" spellcheck="false">{ "answer": 42 }</textarea>
+            <textarea id="txt-input" spellcheck="false"></textarea>
         </div>
         <div class="status-line">
         <span id="json-status" class="back-green">&nbsp;</span>
@@ -30,7 +30,7 @@
         <div class="result">
             <pre id="disp">&nbsp;</pre>
         </div>
-        <a id="link-binary" download="demo.ubj" href="data:application/ubjson;base64,">Download binary</a>
+        <!-- <a id="link-binary" download="demo.ubj" href="data:application/ubjson;base64,">Download binary</a> -->
         <script type="text/javascript">
             var inpValue = null;
             var onTextChange = function(){
@@ -81,7 +81,6 @@
             var inp = document.getElementById('txt-input');
             inp.onkeyup = onTextChange;
             inp.onchange = onTextChange;
-            window.onload = onTextChange;
             inp.onpaste = function(){
                 setTimeout(function(){
                     onTextChange();
@@ -91,6 +90,18 @@
             document.getElementById('checkbox-highlight').onchange = forcedRefresh;
             document.getElementById('checkbox-formalized').onchange = forcedRefresh;
 
+            window.onload = function() {
+                var hash = window.location.hash;
+                if (hash) {
+                    if (hash[0] == '#') {
+                        hash = hash.substring(1);
+                    }
+                    document.getElementById('txt-input').value = hash;
+                } else {
+                    document.getElementById('txt-input').value = '{\n    "answer": 42\n}';
+                }
+                forcedRefresh();
+            }
         </script>
     </body>
 </html>
