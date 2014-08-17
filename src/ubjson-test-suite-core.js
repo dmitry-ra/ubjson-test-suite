@@ -149,7 +149,7 @@ var UbjsonTestSuiteCore = (function (core) {
                 }
                 break;
             case 'string':
-                this.serializeString(entity, true, true);
+                this.serializeString(entity, true, true, true);
                 break;
             case 'number':
                 this.serializeNumber(entity);
@@ -183,7 +183,7 @@ var UbjsonTestSuiteCore = (function (core) {
         for(var i = 0; i < count; i++) {
             var key = keys[i];
             this.setCurrentSemantic(Semantics.Key);
-            this.serializeString(key, false, false);
+            this.serializeString(key, false, true, true);
             this.setCurrentSemantic(Semantics.Value);
             this.serializeEntity(object[key]);
         }
@@ -191,7 +191,7 @@ var UbjsonTestSuiteCore = (function (core) {
         this.addTagItem(Types.ObjectEnd);
     }
 
-    ObjectSerializer.prototype.serializeString = function(string, emitStringType, charOptimization) {
+    ObjectSerializer.prototype.serializeString = function(string, emitStringType, charOptimization, emptyStringOptimization) {
         if (charOptimization && string.length == 1) {
             var ch = string.charCodeAt(0);
             if (ch < 128) {
@@ -199,6 +199,11 @@ var UbjsonTestSuiteCore = (function (core) {
                 this.addDataItem(Types.Char, ch).displayValue = string;
                 return;
             }
+        }
+        if (emptyStringOptimization && string.length == 0) {
+            this.addTagItem(Types.Char);
+            this.addTagItem(Types.Null);
+            return;
         }
         var utf8value = utf8encode(string);
         var size = utf8value.length;
@@ -344,8 +349,14 @@ var UbjsonTestSuiteCore = (function (core) {
 
 //------------------------------------------------------------------------------
 
+    function BinaryWriter() {
+    }
+
+//------------------------------------------------------------------------------
+
     core.ObjectSerializer = ObjectSerializer;
     core.BlocksTextRenderer = BlocksTextRenderer;
+    core.BinaryWriter = BinaryWriter;
 
     return core;
 
