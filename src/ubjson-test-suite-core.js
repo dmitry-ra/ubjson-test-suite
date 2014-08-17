@@ -147,8 +147,7 @@ var UbjsonTestSuiteCore = (function (core) {
                 }
                 break;
             case 'string':
-                this.addTagItem(Types.String);
-                this.serializeString(entity);
+                this.serializeString(entity, true, true);
                 break;
             case 'number':
                 this.serializeNumber(entity);
@@ -182,7 +181,7 @@ var UbjsonTestSuiteCore = (function (core) {
         for(var i = 0; i < count; i++) {
             var key = keys[i];
             this.setCurrentSemantic(Semantics.Key);
-            this.serializeString(key);
+            this.serializeString(key, false, false);
             this.setCurrentSemantic(Semantics.Value);
             this.serializeEntity(object[key]);
         }
@@ -190,9 +189,20 @@ var UbjsonTestSuiteCore = (function (core) {
         this.addTagItem(Types.ObjectEnd);
     }
 
-    ObjectSerializer.prototype.serializeString = function(string) {
+    ObjectSerializer.prototype.serializeString = function(string, emitStringType, charOptimization) {
+        if (charOptimization && string.length == 1) {
+            var ch = string.charCodeAt(0);
+            if (ch < 128) {
+                this.addTagItem(Types.Char);
+                this.addDataItem(Types.Char, ch);
+                return;
+            }
+        }
         var utf8value = utf8encode(string);
         var size = utf8value.length;
+        if (emitStringType) {
+            this.addTagItem(Types.String);
+        }
         this.serializeNumber(size);
         if (size > 0) {
             this.addDataItem(Types.String, utf8value);
