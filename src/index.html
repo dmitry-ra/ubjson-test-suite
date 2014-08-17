@@ -15,8 +15,11 @@
     </head>
     <body>
         <div class="control-panel">
-            <input id="checkbox-highlight" name="highlight" type="checkbox" value="highlight" checked="true">
+            <input id="checkbox-highlight" name="highlight" type="checkbox" value="highlight" checked>
             <label for="checkbox-highlight">Use highlighting</label>
+            <input id="checkbox-formalized" name="formalized" type="checkbox" value="formalized">
+            <label for="checkbox-formalized">Use formalized syntax</label>
+
         </div>
         <div>
             <textarea id="txt-input" spellcheck="false">{ "answer": 42 }</textarea>
@@ -32,6 +35,9 @@
             var inpValue = null;
             var onTextChange = function(){
                 refreshData(false);
+            }
+            var forcedRefresh = function(){
+                refreshData(true);
             }
             function refreshData(forced) {
                 var val = document.getElementById('txt-input').value;
@@ -65,6 +71,7 @@
                     document.getElementById('json-status').innerHTML = 'OK';
                     var renderer = new UbjsonTestSuiteCore.BlocksTextRenderer();
                     renderer.highlight = document.getElementById('checkbox-highlight').checked;
+                    renderer.formalized = document.getElementById('checkbox-formalized').checked;
                     document.getElementById('disp').innerHTML = renderer.render(parseResult.items);
                 } else {
                     setOK('json-status', false);
@@ -81,9 +88,8 @@
                 }, 0);
             }
 
-            document.getElementById('checkbox-highlight').onchange = function() {
-                refreshData(true);
-            }
+            document.getElementById('checkbox-highlight').onchange = forcedRefresh;
+            document.getElementById('checkbox-formalized').onchange = forcedRefresh;
 
         </script>
     </body>

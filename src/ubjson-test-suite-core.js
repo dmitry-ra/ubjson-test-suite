@@ -310,6 +310,9 @@ var UbjsonTestSuiteCore = (function (core) {
 
     BlocksTextRenderer.prototype.renderDataBlock = function(block) {
         var value = (block.displayValue != null) ? block.displayValue : block.value;
+        if (this.formalized) {
+            value = block.type + ':' + value;
+        }
         if (this.highlight) {
             var style = this.getStyle(block);
             return '<span style="' + style + '">[' + value + ']</span>';
