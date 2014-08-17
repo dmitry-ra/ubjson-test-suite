@@ -248,7 +248,7 @@ var UbjsonTestSuiteCore = (function (core) {
         this.formalized = false;
         this.highlight = true;
         this.styles = {
-                markup: "color: green;",
+                markup: "color: green",
                 key: "color: blue",
                 value: "color: red",
                 arrayItem: "color: orange"
