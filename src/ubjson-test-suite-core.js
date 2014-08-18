@@ -183,7 +183,7 @@ var UbjsonTestSuiteCore = (function (core) {
         for(var i = 0; i < count; i++) {
             var key = keys[i];
             this.setCurrentSemantic(Semantics.Key);
-            this.serializeString(key, false, true);
+            this.serializeString(key, false, false);
             this.setCurrentSemantic(Semantics.Value);
             this.serializeEntity(object[key]);
         }
