@@ -97,7 +97,7 @@
             document.getElementById('checkbox-formalized').onchange = forcedRefresh;
 
             window.onload = function() {
-                var hash = window.location.hash;
+                var hash = (window.location.href.split('#')[1] || '');
                 if (hash) {
                     if (hash[0] == '#') {
                         hash = hash.substring(1);
