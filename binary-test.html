@@ -21,7 +21,12 @@
                 if (c[0] == 0xde) return 'BE';
                 throw new Error('unknown endianness');
             }
-            document.getElementById('disp').innerHTML = 'endianness: ' + endianness();
+            try {
+                document.getElementById('disp').innerHTML = 'endianness: ' + endianness();
+            }
+            catch(error) {
+                document.getElementById('disp').innerHTML = 'ERROR: ' + error;
+            }
         </script>
     </body>
 </html>
