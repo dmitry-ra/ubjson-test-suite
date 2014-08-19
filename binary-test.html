@@ -21,8 +21,18 @@
                 if (c[0] == 0xde) return 'BE';
                 throw new Error('unknown endianness');
             }
+            function float32test(floatNum) {
+                var ab = new ArrayBuffer(4);
+                var dv = new DataView(ab);
+                dv.setFloat32(0, floatNum, false);
+                var str = '';
+                for (var i = 0; i < 4; i++) {
+                    str += String.fromCharCode(dv.getUint8(i));
+                }
+                return btoa(str);
+            }
             try {
-                document.getElementById('disp').innerHTML = 'endianness: ' + endianness();
+                document.getElementById('disp').innerHTML = 'endianness: ' + endianness() + ', data: ' + float32test(76.572);
             }
             catch(error) {
                 document.getElementById('disp').innerHTML = 'ERROR: ' + error;
