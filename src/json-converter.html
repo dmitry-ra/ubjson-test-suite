@@ -32,9 +32,12 @@
         <span id="json-status" class="back-green">&nbsp;</span>
         </div>
         <div class="result">
-            <pre id="disp">&nbsp;</pre>
+            <pre id="block-disp">&nbsp;</pre>
         </div>
-        <!-- <a id="link-binary" download="demo.ubj" href="data:application/ubjson;base64,">Download binary</a> -->
+        <a id="link-binary" download="demo.ubj" href="data:application/ubjson;base64,">Download binary</a>
+        <div class="result">
+            <pre id="hex-disp">&nbsp;</pre>
+        </div>
         <hr>
         Current specification: <a href="http://ubjson.org/" target="_blank">http://ubjson.org/</a>
         <script type="text/javascript">
@@ -78,7 +81,14 @@
                     var renderer = new UbjsonTestSuiteCore.BlocksTextRenderer();
                     renderer.highlight = document.getElementById('checkbox-highlight').checked;
                     renderer.formalized = document.getElementById('checkbox-formalized').checked;
-                    document.getElementById('disp').innerHTML = renderer.render(parseResult.items);
+                    document.getElementById('block-disp').innerHTML = renderer.render(parseResult.items);
+
+                    var hex = '';
+                    for (var i = 0; i < 10; i++) {
+                        hex += '00 01 <span class="back-green">02</span> 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 6f\n';
+                    }
+
+                    document.getElementById('hex-disp').innerHTML = hex;
                 } else {
                     setOK('json-status', false);
                     document.getElementById('json-status').innerHTML = parseResult.error;
