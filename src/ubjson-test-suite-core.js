@@ -213,6 +213,12 @@ var UbjsonTestSuiteCore = (function (core) {
 
     ObjectSerializer.prototype.serializeNumber = function(number) {
         var type = findSuitableNumericType(number);
+
+        //TODO: save Types.HighNumber as string
+        //[H][i][17][12345678901234567] ?
+        //Numeric values of NaN & Infinity are encoded as a null value.
+        //TODO: fix [H][H:Infinity]
+
         this.addTagItem(type);
         this.addDataItem(type, number);
     }
@@ -345,6 +351,89 @@ var UbjsonTestSuiteCore = (function (core) {
 //------------------------------------------------------------------------------
 
     function BinaryWriter() {
+        var buffer = new ArrayBuffer(8);
+        this.data = new DataView(buffer);
+        this.binary = '';
+    }
+
+    BinaryWriter.prototype.writeBlocks = function(items) {
+        var count = items.length;
+        for (var i = 0; i < count; i++) {
+            var block = items[i];
+            if (block instanceof TagItem) {
+                this.binary += block.type;
+            } else {
+                switch(block.type) {
+                    case Types.String:
+                    case Types.HighNumber:
+                        this.binary += block.value;
+                        break;
+                    case Types.Int8:
+                        this.data.setInt8(0, block.value);
+                        this.flush(1);
+                        break;
+                    case Types.Char:
+                    case Types.UInt8:
+                        this.data.setUint8(0, block.value);
+                        this.flush(1);
+                        break;
+                    case Types.Int16:
+                        this.data.setInt16(0, block.value, false);
+                        this.flush(2);
+                        break;
+                    case Types.Int32:
+                        this.data.setInt32(0, block.value, false);
+                        this.flush(4);
+                        break;
+                    case Types.Int64:
+
+                        //TODO: check! JS typically does'n have pure int64.
+                        var hi = 0;
+                        var lo = 0;
+
+                        this.data.setInt32(0, hi, false);
+                        this.data.setInt32(4, lo, false);
+                        this.flush(8);
+                        break;
+                    case Types.Float32:
+                        this.data.setFloat32(0, block.value, false);
+                        this.flush(4);
+                        break;
+                    case Types.Float64:
+                        this.data.setFloat64(0, block.value, false);
+                        this.flush(8);
+                        break;
+                }
+            }
+        }
+    }
+
+    BinaryWriter.prototype.flush = function(size) {
+        for (var i = 0; i < size; i++) {
+            this.binary += String.fromCharCode(this.data.getUint8(i));
+        }
+    }
+
+//------------------------------------------------------------------------------
+
+    function HexRenderer() {
+        this.bytesPerLine = 16;
+    }
+
+    HexRenderer.prototype.renderBinaryString = function(binary) {
+        var text = '';
+        var count = binary.length;
+        var n = this.bytesPerLine;
+        for (var i = 0; i < count; i++) {
+            var code = binary.charCodeAt(i);
+            if (--n == 0) {
+                n = this.bytesPerLine;
+                text += code.toString(16) + '\n';
+            } else {
+                text += code.toString(16) + ' ';
+            }
+        }
+        return text;
     }
 
 //------------------------------------------------------------------------------
@@ -352,6 +441,7 @@ var UbjsonTestSuiteCore = (function (core) {
     core.ObjectSerializer = ObjectSerializer;
     core.BlocksTextRenderer = BlocksTextRenderer;
     core.BinaryWriter = BinaryWriter;
+    core.HexRenderer = HexRenderer;
 
     return core;
 
