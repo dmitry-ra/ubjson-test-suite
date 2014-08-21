@@ -441,7 +441,10 @@ ul.nav li a, #navigation ul.rss a { font:normal 14px/1em Arial, sans-serif;color
     <span style="color: #3366CC;">&quot;int32&quot;</span><span style="color: #339933;">:</span> <span style="color: #CC0000;">2147483647</span><span style="color: #339933;">,</span>
     <span style="color: #3366CC;">&quot;int64&quot;</span><span style="color: #339933;">:</span> <span style="color: #CC0000;">9223372036854775807</span><span style="color: #339933;">,</span>
     <span style="color: #3366CC;">&quot;float32&quot;</span><span style="color: #339933;">:</span> <span style="color: #CC0000;">3.14</span><span style="color: #339933;">,</span>
-    <span style="color: #3366CC;">&quot;float64&quot;</span><span style="color: #339933;">:</span> <span style="color: #CC0000;">113243.7863123</span>
+    <span style="color: #3366CC;">&quot;float64&quot;</span><span style="color: #339933;">:</span> <span style="color: #CC0000;">113243.7863123</span><span style="color: #339933;">,</span>
+    <span style="color: #3366CC;">&quot;huge1&quot;</span><span style="color: #339933;">:</span> <span style="color: #3366CC;">&quot;3.14159265358979323846&quot;</span><span style="color: #339933;">,</span>
+    <span style="color: #3366CC;">&quot;huge2&quot;</span><span style="color: #339933;">:</span> <span style="color: #3366CC;">&quot;-1.93+E190&quot;</span><span style="color: #339933;">,</span>
+    <span style="color: #3366CC;">&quot;huge3&quot;</span><span style="color: #339933;">:</span> <span style="color: #3366CC;">&quot;719...&lt;197 more digits...&gt;&quot;</span>
 <span style="color: #009900;">&#125;</span></pre></td></tr></table></div>
 
 <p>UBJSON snippets (using block-notation):</p>
@@ -451,7 +454,11 @@ ul.nav li a, #navigation ul.rss a { font:normal 14px/1em Arial, sans-serif;color
 [i][5][int32][l][2147483647]
 [i][5][int64][L][9223372036854775807]
 [i][7][float32][d][3.14]
-[i][7][float64][D][113243.7863123]</pre>
+[i][7][float64][D][113243.7863123]
+[H][i][22][3.14159265358979323846]
+[H][i][10][-1.93+E190]
+[H][U][200][719...<197 more digits...>]
+</pre>
 <h3><a name="numeric-infinity"></a>Infinity</h3>
 <p>Numeric values of <strong>infinity</strong> are encoded as a <a href="index.html#null"><em>null</em> </a>value. (See <a href="http://www.ecma-international.org/publications/files/ECMA-ST/Ecma-262.pdf">ECMA</a> and <a href="http://json.org/json.ppt">JSON</a>)</p>
 <h3><a name="numeric-sign-min-max"></a>Signage &amp; Min/Max Values</h3>
