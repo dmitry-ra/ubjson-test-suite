@@ -146,7 +146,7 @@ var UbjsonTestSuiteCore = (function (core) {
             this.addTagItem(Types.Null);
             return;
         }
-        switch(typeof(entity)) {
+        switch (typeof(entity)) {
             case 'object':
                 if (entity instanceof Array) {
                     this.serializeArray(entity);
@@ -337,7 +337,8 @@ var UbjsonTestSuiteCore = (function (core) {
     }
 
     BlocksTextRenderer.prototype.getStyle = function(block) {
-        switch(block.semantic & Semantics.LowValuesMask) {
+        var semantic = (block.semantic & Semantics.LowValuesMask);
+        switch (semantic) {
             case Semantics.Markup:
                 return this.styles.markup;
             case Semantics.Key:
@@ -346,6 +347,8 @@ var UbjsonTestSuiteCore = (function (core) {
                 return this.styles.value;
             case Semantics.ArrayItem:
                 return this.styles.arrayItem;
+            default:
+                throw new Error('Unknown semantic code "' + semantic + '"');
         }
     }
 
@@ -372,9 +375,8 @@ var UbjsonTestSuiteCore = (function (core) {
             if (block instanceof TagItem) {
                 this.binary += block.type;
             } else {
-                switch(block.type) {
+                switch (block.type) {
                     case Types.String:
-                    case Types.HighNumber:
                         this.binary += block.value;
                         break;
                     case Types.Char:
@@ -405,6 +407,8 @@ var UbjsonTestSuiteCore = (function (core) {
                         this.data.setFloat64(0, block.value, false);
                         this.flush(8);
                         break;
+                    default:
+                        throw new Error('Invalid DataItem block type "' + block.type + '"');
                 }
             }
         }
