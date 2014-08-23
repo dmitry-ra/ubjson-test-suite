@@ -58,11 +58,20 @@ var UbjsonTestSuiteCore = (function (core) {
         return unescape(encodeURIComponent(string));
     }
 
+    function getByteHex(code) {
+        if (code < MinUInt8 || code > MaxUInt8)
+            throw new Error('Byte range overflow.');
+        if (code <= 15) {
+            return '0' + code.toString(16).toUpperCase();
+        }
+        return code.toString(16).toUpperCase();
+    }
+
     function isInteger(number) {
         return number >= MinSafeInteger &&
             number <= MaxSafeInteger &&
             Math.floor(number) === number;
-    };
+    }
 
     function findSuitableNumericType(number) {
         if (!isFinite(number))
@@ -434,9 +443,9 @@ var UbjsonTestSuiteCore = (function (core) {
             var code = binary.charCodeAt(i);
             if (--n == 0) {
                 n = this.bytesPerLine;
-                text += code.toString(16) + '\n';
+                text += getByteHex(code) + '\n';
             } else {
-                text += code.toString(16) + ' ';
+                text += getByteHex(code) + ' ';
             }
         }
         return text;
