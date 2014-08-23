@@ -34,7 +34,7 @@
         <div class="result">
             <pre id="block-disp">&nbsp;</pre>
         </div>
-        <a id="link-binary" download="demo.ubj" href="data:application/ubjson;base64,">Download binary</a>
+        <a id="download-link" href="#">Download binary</a>
         <div class="result">
             <pre id="hex-disp">&nbsp;</pre>
         </div>
@@ -78,6 +78,7 @@
                 if (parseResult.success) {
                     setOK('json-status', true);
                     document.getElementById('json-status').innerHTML = 'OK';
+
                     var renderer = new UbjsonTestSuiteCore.BlocksTextRenderer();
                     renderer.highlight = document.getElementById('checkbox-highlight').checked;
                     renderer.formalized = document.getElementById('checkbox-formalized').checked;
@@ -85,10 +86,15 @@
 
                     var writer = new UbjsonTestSuiteCore.BinaryWriter();
                     writer.writeBlocks(parseResult.items);
+
                     var hexRenderer = new UbjsonTestSuiteCore.HexRenderer();
                     var hex = hexRenderer.renderBinaryString(writer.binary);
-                    hex += '\n\n(' + writer.binary.length + ' bytes)'
                     document.getElementById('hex-disp').innerHTML = hex;
+
+                    var dl = document.getElementById('download-link');
+                    dl.href = 'data:application/ubjson;base64,' + btoa(writer.binary);
+                    dl.download = 'data_' + (new Date()).toISOString().replace(/:/g, '_') + '.ubj';
+                    dl.innerHTML = 'Download binary (' + writer.binary.length + ' bytes)';
                 } else {
                     setOK('json-status', false);
                     document.getElementById('json-status').innerHTML = parseResult.error;
