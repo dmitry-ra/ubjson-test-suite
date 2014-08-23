@@ -387,7 +387,7 @@ var UbjsonTestSuiteCore = (function (core) {
                         this.flush(2);
                         break;
                     case Types.Int32:
-                        this.data.setInt32(4, block.value, false);
+                        this.data.setInt32(0, block.value, false);
                         this.flush(4);
                         break;
                     case Types.Int64:
