@@ -35,12 +35,13 @@ var UbjsonTestSuiteCore = (function (core) {
     var MaxInt16 = 32767;
     var MinInt32 = -2147483648;
     var MaxInt32 = 2147483647;
-    var MinInt64 = -9223372036854775808;
-    var MaxInt64 = 9223372036854775807;
+    var MaxUInt32 = 4294967295;
     var MinFloat32 = -3.402823e38;
     var MaxFloat32 = 3.402823e+38;
     var MinFloat64 = -1.7976931348623157E+308;
     var MaxFloat64 = 1.7976931348623157E+308;
+    var MaxSafeInteger = 9007199254740991;
+    var MinSafeInteger = -9007199254740991;
 
     var Semantics = {
         Markup: 1,
@@ -58,13 +59,15 @@ var UbjsonTestSuiteCore = (function (core) {
     }
 
     function isInteger(number) {
-        return isFinite(number) &&
-            number > -9007199254740992 &&
-            number < 9007199254740992 &&
+        return number >= MinSafeInteger &&
+            number <= MaxSafeInteger &&
             Math.floor(number) === number;
     };
 
     function findSuitableNumericType(number) {
+        if (!isFinite(number))
+            return Types.Null;
+
         if (isInteger(number)) {
             if (number >= MinInt8 && number <= MaxInt8)
                 return Types.Int8;
@@ -78,16 +81,19 @@ var UbjsonTestSuiteCore = (function (core) {
             if (number >= MinInt32 && number <= MaxInt32)
                 return Types.Int32;
 
-            if (number >= MinInt64 && number <= MaxInt64)
+            if (number > MaxInt32 && number <= MaxUInt32)
                 return Types.Int64;
+
+            return Types.HighNumber;
         } else {
             if (number >= MinFloat32 && number <= MaxFloat32)
                 return Types.Float32;
 
             if (number >= MinFloat64 && number <= MaxFloat64)
                 return Types.Float64;
+
+            throw new Error('Unexpected float number.');
         }
-        return Types.HighNumber;
     }
 
 //------------------------------------------------------------------------------
@@ -152,7 +158,7 @@ var UbjsonTestSuiteCore = (function (core) {
                 this.serializeString(entity, true, true);
                 break;
             case 'number':
-                this.serializeNumber(entity);
+                this.serializeNumber(entity, false);
                 break;
             case 'boolean':
                 this.serializeBoolean(entity);
@@ -205,22 +211,25 @@ var UbjsonTestSuiteCore = (function (core) {
         if (emitStringType) {
             this.addTagItem(Types.String);
         }
-        this.serializeNumber(size);
+        this.serializeNumber(size, true);
         if (size > 0) {
             this.addDataItem(Types.String, utf8value).displayValue = string;
         }
     }
 
-    ObjectSerializer.prototype.serializeNumber = function(number) {
+    ObjectSerializer.prototype.serializeNumber = function(number, notNull) {
         var type = findSuitableNumericType(number);
-
-        //TODO: save Types.HighNumber as string
-        //[H][i][17][12345678901234567] ?
-        //Numeric values of NaN & Infinity are encoded as a null value.
-        //TODO: fix [H][H:Infinity]
+        if (type == Types.Null && notNull)
+            throw new Error('Unallowed Null type');
 
         this.addTagItem(type);
-        this.addDataItem(type, number);
+        if (type != Types.Null) {
+            if (type == Types.HighNumber) {
+                this.serializeString(number.toString(), false, false);
+            } else {
+                this.addDataItem(type, number);
+            }
+        }
     }
 
     ObjectSerializer.prototype.serializeBoolean = function(bool) {
@@ -368,31 +377,24 @@ var UbjsonTestSuiteCore = (function (core) {
                     case Types.HighNumber:
                         this.binary += block.value;
                         break;
-                    case Types.Int8:
-                        this.data.setInt8(0, block.value);
-                        this.flush(1);
-                        break;
                     case Types.Char:
+                    case Types.Int8:
                     case Types.UInt8:
-                        this.data.setUint8(0, block.value);
-                        this.flush(1);
+                        this.binary += String.fromCharCode(block.value & 0xFF);
                         break;
                     case Types.Int16:
                         this.data.setInt16(0, block.value, false);
                         this.flush(2);
                         break;
                     case Types.Int32:
-                        this.data.setInt32(0, block.value, false);
+                        this.data.setInt32(4, block.value, false);
                         this.flush(4);
                         break;
                     case Types.Int64:
-
-                        //TODO: check! JS typically does'n have pure int64.
-                        var hi = 0;
-                        var lo = 0;
-
-                        this.data.setInt32(0, hi, false);
-                        this.data.setInt32(4, lo, false);
+                        //We use Int64 just for range MaxInt32 < number <= MaxUInt32.
+                        //Thus, high four bytes is always zero.
+                        this.data.setUint32(0, 0, false);
+                        this.data.setUint32(4, block.value, false);
                         this.flush(8);
                         break;
                     case Types.Float32:
