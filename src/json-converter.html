@@ -55,6 +55,20 @@
                     updateData(val);
                 }
             }
+
+            function addClassName(element, name) {
+                var rex = new RegExp('\\b' + name + '\\b');
+                if (!element.className.match(rex)) {
+                    var cn = element.className.trim();
+                    element.className = (cn.length == 0) ? name : cn + ' ' + name;
+                }
+            }
+
+            function removeClassName(element, name) {
+                var rex = new RegExp('\\b' + name + '\\b');
+                element.className = element.className.replace(rex, '').trim();
+            }
+
             function setOK(id, green) {
                 var added = green ? 'back-green' : 'back-red';
                 var removed = green ? 'back-red' : 'back-green';
@@ -62,6 +76,8 @@
                 var element = document.getElementById(id);
                 element.className = element.className.replace(rex, added);
             }
+
+            var blocksMap = [];
             function updateData(jsonText)
             {
                 var parseResult = {};
@@ -79,16 +95,24 @@
                     setOK('json-status', true);
                     document.getElementById('json-status').innerHTML = 'OK';
 
+                    var highlight = document.getElementById('checkbox-highlight').checked;
                     var renderer = new UbjsonTestSuiteCore.BlocksTextRenderer();
-                    renderer.highlight = document.getElementById('checkbox-highlight').checked;
+                    renderer.highlight = highlight;
                     renderer.formalized = document.getElementById('checkbox-formalized').checked;
                     document.getElementById('block-disp').innerHTML = renderer.render(parseResult.items);
 
+                    blocksMap = null;
                     var writer = new UbjsonTestSuiteCore.BinaryWriter();
+                    if (highlight) {
+                        blocksMap = [];
+                        writer.onAfterWrite = function(offset, size, id) {
+                            blocksMap.push({ id: id, start: offset });
+                        }
+                    }
                     writer.writeBlocks(parseResult.items);
 
                     var hexRenderer = new UbjsonTestSuiteCore.HexRenderer();
-                    var hex = hexRenderer.renderBinaryString(writer.binary);
+                    var hex = hexRenderer.renderBinaryString(writer.binary, blocksMap);
                     document.getElementById('hex-disp').innerHTML = hex;
 
                     var dl = document.getElementById('download-link');
@@ -111,6 +135,58 @@
 
             document.getElementById('checkbox-highlight').onchange = forcedRefresh;
             document.getElementById('checkbox-formalized').onchange = forcedRefresh;
+
+            var BlockIdPrefix = UbjsonTestSuiteCore.BlocksTextRenderer.prototype.BlockIdPrefix;
+            var HexIdPrefix = UbjsonTestSuiteCore.HexRenderer.prototype.HexIdPrefix;
+
+            var currentBlockId = -1;
+            function selectBlock(id) {
+                if (!isFinite(id)) {
+                    id = -1;
+                }
+
+                if (id >= 0) {
+                    var newBlock = document.getElementById(BlockIdPrefix + id);
+                    var newHex = document.getElementById(HexIdPrefix + id);
+                    addClassName(newBlock, 'back-green');
+                    addClassName(newHex, 'back-green');
+                }
+                if (currentBlockId >= 0) {
+                    var oldBlock = document.getElementById(BlockIdPrefix + currentBlockId);
+                    var oldHex = document.getElementById(HexIdPrefix + currentBlockId);
+                    removeClassName(oldBlock, 'back-green');
+                    removeClassName(oldHex, 'back-green');
+                }
+                currentBlockId = id;
+            }
+
+            function dispMouseOverHandler(e, prefix) {
+                var el = document.elementFromPoint(e.clientX, e.clientY);
+                if (el.tagName == 'SPAN' && el.id) {
+                    if (el.id.indexOf(prefix) == 0) {
+                        var id = parseInt(el.id.slice(prefix.length));
+                        selectBlock(id);
+                    }
+                } else {
+                    selectBlock(-1);
+                }
+            }
+
+            var bdisp = document.getElementById('block-disp');
+            bdisp.onmouseover = function(e) {
+                dispMouseOverHandler(e, BlockIdPrefix);
+            }
+            bdisp.onmouseleave = function() {
+                selectBlock(-1);
+            }
+
+            var hdisp = document.getElementById('hex-disp');
+            hdisp.onmouseover = function(e) {
+                dispMouseOverHandler(e, HexIdPrefix);
+            }
+            hdisp.onmouseleave = function() {
+                selectBlock(-1);
+            }
 
             window.onload = function() {
                 var hash = decodeURIComponent(window.location.href.split('#')[1] || '');

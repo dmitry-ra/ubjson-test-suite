@@ -279,6 +279,8 @@ var UbjsonTestSuiteCore = (function (core) {
             };
     }
 
+    BlocksTextRenderer.prototype.BlockIdPrefix = 'block';
+
     BlocksTextRenderer.prototype.render = function(items) {
         var text = '';
         var indent = '';
@@ -288,6 +290,7 @@ var UbjsonTestSuiteCore = (function (core) {
         var startNewLine = false;
         for (var i = 0; i < count; i++) {
             var block = items[i];
+            var id = this.BlockIdPrefix + i;
             if (block instanceof TagItem) {
                 if (block.type == Types.ObjectEnd || block.type == Types.ArrayEnd) {
                     indent = this.getIndent(--nestingLevel);
@@ -310,36 +313,36 @@ var UbjsonTestSuiteCore = (function (core) {
                     text += '\n' + indent;
                     startNewLine = false;
                 }
-                text += this.renderTagBlock(block);
+                text += this.renderTagBlock(block, id);
                 if (block.type == Types.ObjectBegin || block.type == Types.ArrayBegin) {
                     indent = this.getIndent(++nestingLevel);
                     startNewLine = true;
                 }
             } else {
-                text += this.renderDataBlock(block);
+                text += this.renderDataBlock(block, id);
             }
             prevBlock = block;
         }
         return text;
     }
 
-    BlocksTextRenderer.prototype.renderTagBlock = function(block) {
+    BlocksTextRenderer.prototype.renderTagBlock = function(block, id) {
         if (this.highlight) {
             var style = this.getStyle(block);
-            return '<span style="' + style + '">[' + block.type + ']</span>';
+            return '<span id="' + id + '" style="' + style + '">[' + block.type + ']</span>';
         } else {
             return '[' + block.type + ']';
         }
     }
 
-    BlocksTextRenderer.prototype.renderDataBlock = function(block) {
+    BlocksTextRenderer.prototype.renderDataBlock = function(block, id) {
         var value = (block.displayValue != null) ? block.displayValue : block.value;
         if (this.formalized) {
             value = block.type + ':' + value;
         }
         if (this.highlight) {
             var style = this.getStyle(block);
-            return '<span style="' + style + '">[' + value + ']</span>';
+            return '<span id="' + id + '" style="' + style + '">[' + value + ']</span>';
         } else {
             return '[' + value + ']';
         }
@@ -375,50 +378,63 @@ var UbjsonTestSuiteCore = (function (core) {
         var buffer = new ArrayBuffer(8);
         this.data = new DataView(buffer);
         this.binary = '';
+        this.onAfterWrite = null;
     }
 
     BinaryWriter.prototype.writeBlocks = function(items) {
         var count = items.length;
+        var onAfterWrite = this.onAfterWrite;
         for (var i = 0; i < count; i++) {
             var block = items[i];
-            if (block instanceof TagItem) {
-                this.binary += block.type;
+            if (onAfterWrite) {
+                var offset = this.binary.length;
+                this.writeBlock(block);
+                var size = this.binary.length - offset;
+                onAfterWrite(offset, size, i, block);
             } else {
-                switch (block.type) {
-                    case Types.String:
-                        this.binary += block.value;
-                        break;
-                    case Types.Char:
-                    case Types.Int8:
-                    case Types.UInt8:
-                        this.binary += String.fromCharCode(block.value & 0xFF);
-                        break;
-                    case Types.Int16:
-                        this.data.setInt16(0, block.value, false);
-                        this.flush(2);
-                        break;
-                    case Types.Int32:
-                        this.data.setInt32(0, block.value, false);
-                        this.flush(4);
-                        break;
-                    case Types.Int64:
-                        //We use Int64 just for range MaxInt32 < number <= MaxUInt32.
-                        //Thus, high four bytes is always zero.
-                        this.data.setUint32(0, 0, false);
-                        this.data.setUint32(4, block.value, false);
-                        this.flush(8);
-                        break;
-                    case Types.Float32:
-                        this.data.setFloat32(0, block.value, false);
-                        this.flush(4);
-                        break;
-                    case Types.Float64:
-                        this.data.setFloat64(0, block.value, false);
-                        this.flush(8);
-                        break;
-                    default:
-                        throw new Error('Invalid DataItem block type "' + block.type + '"');
-                }
+                this.writeBlock(block);
+            }
+        }
+    }
+
+    BinaryWriter.prototype.writeBlock = function(block) {
+        if (block instanceof TagItem) {
+            this.binary += block.type;
+        } else {
+            switch (block.type) {
+                case Types.String:
+                    this.binary += block.value;
+                    break;
+                case Types.Char:
+                case Types.Int8:
+                case Types.UInt8:
+                    this.binary += String.fromCharCode(block.value & 0xFF);
+                    break;
+                case Types.Int16:
+                    this.data.setInt16(0, block.value, false);
+                    this.flush(2);
+                    break;
+                case Types.Int32:
+                    this.data.setInt32(0, block.value, false);
+                    this.flush(4);
+                    break;
+                case Types.Int64:
+                    //We use Int64 just for range MaxInt32 < number <= MaxUInt32.
+                    //Thus, high four bytes is always zero.
+                    this.data.setUint32(0, 0, false);
+                    this.data.setUint32(4, block.value, false);
+                    this.flush(8);
+                    break;
+                case Types.Float32:
+                    this.data.setFloat32(0, block.value, false);
+                    this.flush(4);
+                    break;
+                case Types.Float64:
+                    this.data.setFloat64(0, block.value, false);
+                    this.flush(8);
+                    break;
+                default:
+                    throw new Error('Invalid DataItem block type "' + block.type + '"');
             }
         }
     }
@@ -435,11 +451,22 @@ var UbjsonTestSuiteCore = (function (core) {
         this.bytesPerLine = 16;
     }
 
-    HexRenderer.prototype.renderBinaryString = function(binary) {
+    HexRenderer.prototype.HexIdPrefix = 'hex';
+
+    HexRenderer.prototype.renderBinaryString = function(binary, blocksMap) {
+        if (blocksMap) {
+            return this.renderBinaryStringWithMarkup(binary, blocksMap);
+        }
+        return this.renderBinaryStringPlain(binary);
+    }
+
+    HexRenderer.prototype.renderBinaryStringPlain = function(binary) {
         var text = '';
-        var count = binary.length;
+        if (binary.length <= 0)
+            return text;
+        var lastPos = binary.length - 1;
         var n = this.bytesPerLine;
-        for (var i = 0; i < count; i++) {
+        for (var i = 0; i < lastPos; i++) {
             var code = binary.charCodeAt(i);
             if (--n == 0) {
                 n = this.bytesPerLine;
@@ -447,6 +474,47 @@ var UbjsonTestSuiteCore = (function (core) {
             } else {
                 text += getByteHex(code) + ' ';
             }
+        }
+        return text + getByteHex(binary.charCodeAt(lastPos));
+    }
+
+    HexRenderer.prototype.renderBinaryStringWithMarkup = function(binary, blocksMap) {
+        var id, text = '';
+        var count = binary.length;
+        var n = this.bytesPerLine;
+        var nextBlock = blocksMap[0];
+        var k = 1;
+        var opened = false;
+        for (var i = 0; i < count; i++) {
+            var hex = getByteHex(binary.charCodeAt(i));
+            var start = (nextBlock.start == i);
+            if (start) {
+                id = this.HexIdPrefix + nextBlock.id;
+                if (k < blocksMap.length) {
+                    nextBlock = blocksMap[k++];
+                }
+                if (opened) {
+                    text += '</span>';
+                    opened = false;
+                }
+            }
+            if (i > 0) {
+                if (--n == 0) {
+                    n = this.bytesPerLine;
+                    text += '\n';
+                } else {
+                    text += ' ';
+                }
+            }
+            if (start) {
+                text += '<span id="' + id + '">' + hex;
+                opened = true;
+            } else {
+                text += hex;
+            }
+        }
+        if (opened) {
+            text += '</span>';
         }
         return text;
     }
