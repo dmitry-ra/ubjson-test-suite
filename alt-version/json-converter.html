@@ -1,0 +1,203 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>JSON to UBJSON converter [ALTERNATIVE]</title>
+        <style type="text/css">
+            .back-green { background-color: #90FF90; }
+            .back-red { background-color: #FF9090; }
+            hr { margin:0px; padding:0px; border-bottom:1px dashed #777;
+                border-top:0px; border-left:0px; border-right:0px;
+                line-height:0px; height:1px; display:block;
+            }
+            textarea { border:1px solid #999999; width: 90%; min-height: 150px; font-family: monospace; }
+            .result { background-color: #F0F0F0; width: 90%; }
+            .status-line { width: 90%; font-family: monospace; }
+            .control-panel { width: 90%; font-weight: bold; }
+        </style>
+        <script type="text/javascript" src="ubjson-test-suite-core.js"></script>
+    </head>
+    <body>
+        <p class="back-red">ALTERNATIVE</p>
+        <div class="control-panel">
+            <input id="checkbox-highlight" name="highlight" type="checkbox" value="highlight" checked>
+            <label for="checkbox-highlight">Use highlighting</label>
+            <input id="checkbox-formalized" name="formalized" type="checkbox" value="formalized">
+            <label for="checkbox-formalized">Use formalized syntax</label>
+
+        </div>
+        <div>
+            <textarea id="txt-input" spellcheck="false"></textarea>
+        </div>
+        <div class="status-line">
+        <span id="json-status" class="back-green">&nbsp;</span>
+        </div>
+        <div class="result">
+            <pre id="block-disp">&nbsp;</pre>
+        </div>
+        <a id="download-link" href="#">Download binary</a>
+        <div class="result">
+            <pre id="hex-disp">&nbsp;</pre>
+        </div>
+        <hr>
+        Current specification: <a href="http://ubjson.org/" target="_blank">http://ubjson.org/</a>
+        <script type="text/javascript">
+            var inpValue = null;
+            var onTextChange = function(){
+                refreshData(false);
+            }
+            var forcedRefresh = function(){
+                refreshData(true);
+            }
+            function refreshData(forced) {
+                var val = document.getElementById('txt-input').value;
+                if (forced || inpValue !== val) {
+                    inpValue = val;
+                    updateData(val);
+                }
+            }
+
+            function addClassName(element, name) {
+                var rex = new RegExp('\\b' + name + '\\b');
+                if (!element.className.match(rex)) {
+                    var cn = element.className.trim();
+                    element.className = (cn.length == 0) ? name : cn + ' ' + name;
+                }
+            }
+
+            function removeClassName(element, name) {
+                var rex = new RegExp('\\b' + name + '\\b');
+                element.className = element.className.replace(rex, '').trim();
+            }
+
+            function setOK(id, green) {
+                var added = green ? 'back-green' : 'back-red';
+                var removed = green ? 'back-red' : 'back-green';
+                var rex = new RegExp('\\b' + removed + '\\b');
+                var element = document.getElementById(id);
+                element.className = element.className.replace(rex, added);
+            }
+
+            var blocksMap = [];
+            function updateData(jsonText)
+            {
+                var parseResult = {};
+                try {
+                    var value = JSON.parse(jsonText);
+                    var serializer = new UbjsonTestSuiteCore.ObjectSerializer();
+                    parseResult.items = serializer.serialize(value);
+                    parseResult.success = true;
+                } catch(error) {
+                    parseResult.success = false;
+                    parseResult.error = error;
+                }
+
+                if (parseResult.success) {
+                    setOK('json-status', true);
+                    document.getElementById('json-status').innerHTML = 'OK';
+
+                    var highlight = document.getElementById('checkbox-highlight').checked;
+                    var renderer = new UbjsonTestSuiteCore.BlocksTextRenderer();
+                    renderer.highlight = highlight;
+                    renderer.formalized = document.getElementById('checkbox-formalized').checked;
+                    document.getElementById('block-disp').innerHTML = renderer.render(parseResult.items);
+
+                    blocksMap = null;
+                    var writer = new UbjsonTestSuiteCore.BinaryWriter();
+                    if (highlight) {
+                        blocksMap = [];
+                        writer.onAfterWrite = function(offset, size, id) {
+                            blocksMap.push({ id: id, start: offset });
+                        }
+                    }
+                    writer.writeBlocks(parseResult.items);
+
+                    var hexRenderer = new UbjsonTestSuiteCore.HexRenderer();
+                    var hex = hexRenderer.renderBinaryString(writer.binary, blocksMap);
+                    document.getElementById('hex-disp').innerHTML = hex;
+
+                    var dl = document.getElementById('download-link');
+                    dl.href = 'data:application/ubjson;base64,' + btoa(writer.binary);
+                    dl.download = 'data_' + (new Date()).toISOString().replace(/:/g, '_') + '.ubj';
+                    dl.innerHTML = 'Download binary (' + writer.binary.length + ' bytes)';
+                } else {
+                    setOK('json-status', false);
+                    document.getElementById('json-status').innerHTML = parseResult.error;
+                }
+            }
+            var inp = document.getElementById('txt-input');
+            inp.onkeyup = onTextChange;
+            inp.onchange = onTextChange;
+            inp.onpaste = function(){
+                setTimeout(function(){
+                    onTextChange();
+                }, 0);
+            }
+
+            document.getElementById('checkbox-highlight').onchange = forcedRefresh;
+            document.getElementById('checkbox-formalized').onchange = forcedRefresh;
+
+            var BlockIdPrefix = UbjsonTestSuiteCore.BlocksTextRenderer.prototype.BlockIdPrefix;
+            var HexIdPrefix = UbjsonTestSuiteCore.HexRenderer.prototype.HexIdPrefix;
+
+            var currentBlockId = -1;
+            function selectBlock(id) {
+                if (!isFinite(id)) {
+                    id = -1;
+                }
+
+                if (id >= 0) {
+                    var newBlock = document.getElementById(BlockIdPrefix + id);
+                    var newHex = document.getElementById(HexIdPrefix + id);
+                    addClassName(newBlock, 'back-green');
+                    addClassName(newHex, 'back-green');
+                }
+                if (currentBlockId >= 0) {
+                    var oldBlock = document.getElementById(BlockIdPrefix + currentBlockId);
+                    var oldHex = document.getElementById(HexIdPrefix + currentBlockId);
+                    removeClassName(oldBlock, 'back-green');
+                    removeClassName(oldHex, 'back-green');
+                }
+                currentBlockId = id;
+            }
+
+            function dispMouseOverHandler(e, prefix) {
+                var el = document.elementFromPoint(e.clientX, e.clientY);
+                if (el.tagName == 'SPAN' && el.id) {
+                    if (el.id.indexOf(prefix) == 0) {
+                        var id = parseInt(el.id.slice(prefix.length));
+                        selectBlock(id);
+                    }
+                } else {
+                    selectBlock(-1);
+                }
+            }
+
+            var bdisp = document.getElementById('block-disp');
+            bdisp.onmouseover = function(e) {
+                dispMouseOverHandler(e, BlockIdPrefix);
+            }
+            bdisp.onmouseleave = function() {
+                selectBlock(-1);
+            }
+
+            var hdisp = document.getElementById('hex-disp');
+            hdisp.onmouseover = function(e) {
+                dispMouseOverHandler(e, HexIdPrefix);
+            }
+            hdisp.onmouseleave = function() {
+                selectBlock(-1);
+            }
+
+            window.onload = function() {
+                var hash = decodeURIComponent(window.location.href.split('#')[1] || '');
+                if (hash) {
+                    document.getElementById('txt-input').value = hash;
+                } else {
+                    document.getElementById('txt-input').value = '{\n    "answer": 42\n}';
+                }
+                forcedRefresh();
+            }
+        </script>
+    </body>
+</html>
