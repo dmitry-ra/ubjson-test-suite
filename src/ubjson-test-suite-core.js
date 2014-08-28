@@ -526,10 +526,24 @@ var UbjsonTestSuiteCore = (function (core) {
 
 //------------------------------------------------------------------------------
 
+    function BlocksTextParser() {
+    }
+
+    BlocksTextParser.prototype.parse = function(text) {
+        var items = [];
+
+        //
+
+        return items;
+    }
+
+//------------------------------------------------------------------------------
+
     core.ObjectSerializer = ObjectSerializer;
     core.BlocksTextRenderer = BlocksTextRenderer;
     core.BinaryWriter = BinaryWriter;
     core.HexRenderer = HexRenderer;
+    core.BlocksTextParser = BlocksTextParser;
 
     return core;
 
