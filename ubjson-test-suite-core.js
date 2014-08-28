@@ -36,10 +36,6 @@ var UbjsonTestSuiteCore = (function (core) {
     var MinInt32 = -2147483648;
     var MaxInt32 = 2147483647;
     var MaxUInt32 = 4294967295;
-    var MinFloat32 = -3.402823e38;
-    var MaxFloat32 = 3.402823e+38;
-    var MinFloat64 = -1.7976931348623157E+308;
-    var MaxFloat64 = 1.7976931348623157E+308;
     var MaxSafeInteger = 9007199254740991;
     var MinSafeInteger = -9007199254740991;
 
@@ -73,7 +69,7 @@ var UbjsonTestSuiteCore = (function (core) {
             Math.floor(number) === number;
     }
 
-    function findSuitableNumericType(number) {
+    function findSuitableNumericType(number, optimizeFloats, dataView) {
         if (!isFinite(number))
             return Types.Null;
 
@@ -95,13 +91,16 @@ var UbjsonTestSuiteCore = (function (core) {
 
             return Types.HighNumber;
         } else {
-            if (number >= MinFloat32 && number <= MaxFloat32)
-                return Types.Float32;
-
-            if (number >= MinFloat64 && number <= MaxFloat64)
-                return Types.Float64;
-
-            throw new Error('Unexpected float number.');
+            if (optimizeFloats) {
+                var strNumber = number.toString();
+                dataView.setFloat32(0, number);
+                var str32 = dataView.getFloat32(0).toString();
+                if (str32 === strNumber)
+                    return Types.Float32;
+                if (strNumber.length < 6)
+                    return Types.HighNumber;
+            }
+            return Types.Float64;
         }
     }
 
@@ -138,6 +137,8 @@ var UbjsonTestSuiteCore = (function (core) {
     function ObjectSerializer() {
         this.items = [];
         this.currentSemantic = Semantics.Markup;
+        var buffer = new ArrayBuffer(4);
+        this.floatDataView = new DataView(buffer);
     }
 
     ObjectSerializer.prototype.serialize = function(rootObject) {
@@ -227,7 +228,7 @@ var UbjsonTestSuiteCore = (function (core) {
     }
 
     ObjectSerializer.prototype.serializeNumber = function(number, notNull) {
-        var type = findSuitableNumericType(number);
+        var type = findSuitableNumericType(number, true, this.floatDataView);
         if (type == Types.Null && notNull)
             throw new Error('Unallowed Null type');
 
