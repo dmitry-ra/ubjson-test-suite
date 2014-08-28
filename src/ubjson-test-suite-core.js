@@ -104,6 +104,10 @@ var UbjsonTestSuiteCore = (function (core) {
         }
     }
 
+    function escapeBlockText(text) {
+        return text.replace(/\\/g, '\\\\').replace(/]/g, '\\]').replace(/\[/g, '\\[');
+    }
+
 //------------------------------------------------------------------------------
 
     function BlockItem() {
@@ -339,7 +343,7 @@ var UbjsonTestSuiteCore = (function (core) {
     BlocksTextRenderer.prototype.renderDataBlock = function(block, id) {
         var value = (block.displayValue != null) ? block.displayValue : block.value;
         if (this.formalized) {
-            value = block.type + ':' + value;
+            value = block.type + ':' + escapeBlockText(value.toString());
         }
         if (this.highlight) {
             var style = this.getStyle(block);
