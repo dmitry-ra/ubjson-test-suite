@@ -532,7 +532,26 @@ var UbjsonTestSuiteCore = (function (core) {
     BlocksTextParser.prototype.parse = function(text) {
         var items = [];
 
-        //
+        var begin = -1;
+        var escape = false;
+        var count = text.length;
+        for (var i = 0; i < count; i++) {
+            var ch = text[i];
+            if (ch == '[' && !escape) {
+                if (begin >= 0)
+                    throw new Error('Unexpected "[" symbol at position ' + i);
+                begin = i;
+            } else if (ch == ']' && !escape) {
+                if (begin == -1)
+                    throw new Error('Unexpected "]" symbol at position ' + i);
+                var data = text.substring(begin + 1, i);
+
+                console.log('begin: ' + begin + ', "' + data + '"');
+
+                begin = -1;
+            }
+            escape = (ch == '\\' && !escape);
+        }
 
         return items;
     }
