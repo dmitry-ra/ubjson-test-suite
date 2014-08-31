@@ -109,6 +109,10 @@ var UbjsonTestSuiteCore = (function (core) {
         return text.replace(/\\/g, '\\\\').replace(/]/g, '\\]').replace(/\[/g, '\\[');
     }
 
+    function unescapeBlockText(text) {
+        return text.replace(/\\]/g, ']').replace(/\\\[/g, '[').replace(/\\\\/g, '\\');
+    }
+
 //------------------------------------------------------------------------------
 
     function BlockItem() {
@@ -535,9 +539,11 @@ var UbjsonTestSuiteCore = (function (core) {
 
     BlocksTextParser.prototype.parse = function(text) {
         var items = [];
-
         var markup = Types.ArrayBegin + Types.ArrayEnd + Types.ObjectBegin + Types.ObjectEnd;
-
+        var known = '';
+        for (var k in Types) {
+            known += Types[k];
+        }
         var begin = -1;
         var escape = false;
         var count = text.length;
@@ -551,10 +557,11 @@ var UbjsonTestSuiteCore = (function (core) {
                 if (begin == -1)
                     throw new Error('Unexpected "]" symbol at position ' + i);
                 var data = text.substring(begin + 1, i);
-                var trimmed = data.trim();
+                var trimmed = unescapeBlockText(data).trim();
                 if (trimmed.length == 1) {
                     var type = trimmed[0];
-                    //TODO: verify
+                    if (known.indexOf(type) == -1)
+                        throw new Error('Unknown block type "' + type + '"');
                     var semantics = (markup.indexOf(type) >= 0) ? Semantics.Markup : Semantics.Unknown;
                     var item = new TagItem(semantics, type);
                 } else if (trimmed.length > 1 && trimmed[1] == ':') {
@@ -565,12 +572,10 @@ var UbjsonTestSuiteCore = (function (core) {
                     throw new Error('Unknown block');
                 }
                 items.push(item);
-
                 begin = -1;
             }
             escape = (ch == '\\' && !escape);
         }
-
         return items;
     }
 
