@@ -40,6 +40,7 @@ var UbjsonTestSuiteCore = (function (core) {
     var MinSafeInteger = -9007199254740991;
 
     var Semantics = {
+        Unknown: 0,
         Markup: 1,
         Key: 2,
         Value: 3,
@@ -277,10 +278,11 @@ var UbjsonTestSuiteCore = (function (core) {
         this.formalized = false;
         this.highlight = true;
         this.styles = {
-                markup: "color: green",
-                key: "color: blue",
-                value: "color: red",
-                arrayItem: "color: orange"
+                unknown: 'color: black',
+                markup: 'color: green',
+                key: 'color: blue',
+                value: 'color: red',
+                arrayItem: 'color: orange'
             };
     }
 
@@ -356,6 +358,8 @@ var UbjsonTestSuiteCore = (function (core) {
     BlocksTextRenderer.prototype.getStyle = function(block) {
         var semantic = (block.semantic & Semantics.LowValuesMask);
         switch (semantic) {
+            case Semantics.Unknown:
+                return this.styles.unknown;
             case Semantics.Markup:
                 return this.styles.markup;
             case Semantics.Key:
@@ -532,6 +536,8 @@ var UbjsonTestSuiteCore = (function (core) {
     BlocksTextParser.prototype.parse = function(text) {
         var items = [];
 
+        var markup = Types.ArrayBegin + Types.ArrayEnd + Types.ObjectBegin + Types.ObjectEnd;
+
         var begin = -1;
         var escape = false;
         var count = text.length;
@@ -545,8 +551,20 @@ var UbjsonTestSuiteCore = (function (core) {
                 if (begin == -1)
                     throw new Error('Unexpected "]" symbol at position ' + i);
                 var data = text.substring(begin + 1, i);
-
-                console.log('begin: ' + begin + ', "' + data + '"');
+                var trimmed = data.trim();
+                if (trimmed.length == 1) {
+                    var type = trimmed[0];
+                    //TODO: verify
+                    var semantics = (markup.indexOf(type) >= 0) ? Semantics.Markup : Semantics.Unknown;
+                    var item = new TagItem(semantics, type);
+                } else if (trimmed.length > 1 && trimmed[1] == ':') {
+                    var type = trimmed[0];
+                    var value = data.replace(/^\s+/, '').substring(2);
+                    var item = new DataItem(Semantics.Unknown, type, value);
+                } else {
+                    throw new Error('Unknown block');
+                }
+                items.push(item);
 
                 begin = -1;
             }
