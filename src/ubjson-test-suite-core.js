@@ -144,6 +144,56 @@ var UbjsonTestSuiteCore = (function (core) {
 
 //------------------------------------------------------------------------------
 
+    function getTypeMinLength(type) {
+        switch (type) {
+            case Types.Null:
+            case Types.Noop:
+            case Types.True:
+            case Types.False:
+                return 0;
+
+            case Types.Char:
+            case Types.Int8:
+            case Types.UInt8:
+            case Types.Int16:
+            case Types.Int32:
+            case Types.Int64:
+            case Types.Float32:
+            case Types.Float64:
+                return 1;
+
+            case Types.String:
+            case Types.HighNumber:
+                return 2;
+        }
+        return 0;
+    }
+
+    function isOptionalPayload(type) {
+        switch (type) {
+            case Types.String:
+            case Types.HighNumber:
+                return true;
+        }
+        return false;
+    }
+
+    function moveNextRecord(block, context) {
+        if (block instanceof TagItem) {
+            if (context.rest <= 0) {
+                var end = (context.type != '');
+                context.type = block.type;
+                context.rest = getTypeMinLength(block.type);
+                return end;
+            }
+        } else {
+            if (context.rest == 0 && isOptionalPayload(context.type))
+                return false;
+        }
+        context.rest--;
+        return false;
+    }
+
     function semanticMarkup(items) {
         var markup = Types.ArrayBegin + Types.ArrayEnd + Types.ObjectBegin + Types.ObjectEnd;
         var known = '';
@@ -151,6 +201,8 @@ var UbjsonTestSuiteCore = (function (core) {
             known += Types[k];
         }
         var nesting = [];
+        var semantics = Semantics.Unknown;
+        var context = { type: '', rest: 0 };
         var count = items.length;
         for (var i = 0; i < count; i++) {
             var block = items[i];
@@ -158,6 +210,7 @@ var UbjsonTestSuiteCore = (function (core) {
                 block.semantic = Semantics.UnknownType;
             } else if (markup.indexOf(block.type) >= 0) {
                 block.semantic = Semantics.Markup;
+                context.type = '';
                 switch(block.type) {
                     case Types.ArrayBegin:
                     case Types.ObjectBegin:
@@ -173,7 +226,33 @@ var UbjsonTestSuiteCore = (function (core) {
             } else {
                 var scope = nesting[nesting.length - 1] || '';
                 if (scope == Types.ArrayBegin) {
-                    block.semantic = Semantics.ArrayItem;
+                    semantics = Semantics.ArrayItem;
+                    block.semantic = semantics;
+                    if (moveNextRecord(block, context)) {
+                        block.semantic |= Semantics.LastArrayItemFlag;
+                    }
+                } else {
+                    switch (semantics) {
+                        case Semantics.ArrayItem:
+                            semantics = Semantics.Key;
+                            block.semantic = semantics;
+                            break;
+                        case Semantics.Key:
+                        case Semantics.Unknown:
+                            block.semantic = Semantics.Key;
+                            if (block.type == Types.String && block instanceof DataItem) {
+                                semantics = Semantics.Value;
+                                context.type = '';
+                            }
+                            break;
+
+                        case Semantics.Value:
+                            if (moveNextRecord(block, context)) {
+                                semantics = Semantics.Key;
+                            }
+                            block.semantic = semantics;
+                            break;
+                    }
                 }
             }
         }
