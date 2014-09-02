@@ -45,6 +45,7 @@ var UbjsonTestSuiteCore = (function (core) {
         Key: 2,
         Value: 3,
         ArrayItem: 4,
+        UnknownType: 5,
         LowValuesMask: 0xFF,
         LastArrayItemFlag: 0x100
     };
@@ -140,6 +141,43 @@ var UbjsonTestSuiteCore = (function (core) {
 
     TagItem.prototype = new BlockItem();
     TagItem.prototype.constructor = TagItem;
+
+//------------------------------------------------------------------------------
+
+    function semanticMarkup(items) {
+        var markup = Types.ArrayBegin + Types.ArrayEnd + Types.ObjectBegin + Types.ObjectEnd;
+        var known = '';
+        for (var k in Types) {
+            known += Types[k];
+        }
+        var nesting = [];
+        var count = items.length;
+        for (var i = 0; i < count; i++) {
+            var block = items[i];
+            if (known.indexOf(block.type) == -1) {
+                block.semantic = Semantics.UnknownType;
+            } else if (markup.indexOf(block.type) >= 0) {
+                block.semantic = Semantics.Markup;
+                switch(block.type) {
+                    case Types.ArrayBegin:
+                    case Types.ObjectBegin:
+                        nesting.push(block.type);
+                        break;
+                    case Types.ArrayEnd:
+                        if (nesting.pop() != Types.ArrayBegin)
+                            return;
+                    case Types.ObjectEnd:
+                        if (nesting.pop() != Types.ObjectBegin)
+                            return;
+                }
+            } else {
+                var scope = nesting[nesting.length - 1] || '';
+                if (scope == Types.ArrayBegin) {
+                    block.semantic = Semantics.ArrayItem;
+                }
+            }
+        }
+    }
 
 //------------------------------------------------------------------------------
 
@@ -286,7 +324,8 @@ var UbjsonTestSuiteCore = (function (core) {
                 markup: 'color: green',
                 key: 'color: blue',
                 value: 'color: red',
-                arrayItem: 'color: orange'
+                arrayItem: 'color: orange',
+                unknownType: 'color: red; text-decoration: underline'
             };
     }
 
@@ -373,6 +412,8 @@ var UbjsonTestSuiteCore = (function (core) {
                 return this.styles.value;
             case Semantics.ArrayItem:
                 return this.styles.arrayItem;
+            case Semantics.UnknownType:
+                return this.styles.unknownType;
             default:
                 throw new Error('Unknown semantic code "' + semantic + '"');
         }
@@ -540,11 +581,6 @@ var UbjsonTestSuiteCore = (function (core) {
 
     BlocksTextParser.prototype.parse = function(text) {
         var items = [];
-        var markup = Types.ArrayBegin + Types.ArrayEnd + Types.ObjectBegin + Types.ObjectEnd;
-        var known = '';
-        for (var k in Types) {
-            known += Types[k];
-        }
         var begin = -1;
         var escape = false;
         var count = text.length;
@@ -559,16 +595,12 @@ var UbjsonTestSuiteCore = (function (core) {
                     throw new Error('Unexpected "]" symbol at position ' + i);
                 var data = text.substring(begin + 1, i);
                 var trimmed = unescapeBlockText(data).trim();
+                var item;
                 if (trimmed.length == 1) {
-                    var type = trimmed[0];
-                    if (known.indexOf(type) == -1)
-                        throw new Error('Unknown block type "' + type + '"');
-                    var semantics = (markup.indexOf(type) >= 0) ? Semantics.Markup : Semantics.Unknown;
-                    var item = new TagItem(semantics, type);
+                    item = new TagItem(Semantics.Unknown, trimmed[0]);
                 } else if (trimmed.length > 1 && trimmed[1] == ':') {
-                    var type = trimmed[0];
                     var value = data.replace(/^\s+/, '').substring(2);
-                    var item = new DataItem(Semantics.Unknown, type, value);
+                    item = new DataItem(Semantics.Unknown, trimmed[0], value);
                 } else {
                     throw new Error('Unknown block');
                 }
@@ -577,6 +609,7 @@ var UbjsonTestSuiteCore = (function (core) {
             }
             escape = (ch == '\\' && !escape);
         }
+        semanticMarkup(items);
         return items;
     }
 
