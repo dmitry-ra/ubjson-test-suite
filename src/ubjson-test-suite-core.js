@@ -338,11 +338,12 @@ var UbjsonTestSuiteCore = (function (core) {
     }
 
     BlocksTextRenderer.prototype.renderTagBlock = function(block, id) {
+        var type = this.formalized ? escapeBlockText(block.type) : block.type;
         if (this.highlight) {
             var style = this.getStyle(block);
-            return '<span id="' + id + '" style="' + style + '">[' + block.type + ']</span>';
+            return '<span id="' + id + '" style="' + style + '">[' + type + ']</span>';
         } else {
-            return '[' + block.type + ']';
+            return '[' + type + ']';
         }
     }
 
