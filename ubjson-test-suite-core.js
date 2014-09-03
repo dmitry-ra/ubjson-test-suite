@@ -40,10 +40,12 @@ var UbjsonTestSuiteCore = (function (core) {
     var MinSafeInteger = -9007199254740991;
 
     var Semantics = {
+        Unknown: 0,
         Markup: 1,
         Key: 2,
         Value: 3,
         ArrayItem: 4,
+        UnknownType: 5,
         LowValuesMask: 0xFF,
         LastArrayItemFlag: 0x100
     };
@@ -104,6 +106,30 @@ var UbjsonTestSuiteCore = (function (core) {
         }
     }
 
+    function escapeBlockText(text) {
+        return text.replace(/\\/g, '\\\\').replace(/]/g, '\\]').replace(/\[/g, '\\[');
+    }
+
+    function unescapeBlockText(text) {
+        return text.replace(/\\]/g, ']').replace(/\\\[/g, '[').replace(/\\\\/g, '\\');
+    }
+
+    function parseBlockValue(type, value) {
+        switch (type) {
+            case Types.Int8:
+            case Types.UInt8:
+            case Types.Int16:
+            case Types.Int32:
+            case Types.Int64:
+                return parseInt(value, 10);
+
+            case Types.Float32:
+            case Types.Float64:
+                return parseFloat(value);
+        }
+        return value;
+    }
+
 //------------------------------------------------------------------------------
 
     function BlockItem() {
@@ -131,6 +157,120 @@ var UbjsonTestSuiteCore = (function (core) {
 
     TagItem.prototype = new BlockItem();
     TagItem.prototype.constructor = TagItem;
+
+//------------------------------------------------------------------------------
+
+    function getTypeMinLength(type) {
+        switch (type) {
+            case Types.Null:
+            case Types.Noop:
+            case Types.True:
+            case Types.False:
+                return 1;
+
+            case Types.Char:
+            case Types.Int8:
+            case Types.UInt8:
+            case Types.Int16:
+            case Types.Int32:
+            case Types.Int64:
+            case Types.Float32:
+            case Types.Float64:
+                return 2;
+
+            case Types.String:
+            case Types.HighNumber:
+                return 3;
+        }
+        return 0;
+    }
+
+    function isOptionalPayload(type) {
+        switch (type) {
+            case Types.String:
+            case Types.HighNumber:
+                return true;
+        }
+        return false;
+    }
+
+    function moveNextRecord(block, context) {
+        if (context.type == '' || context.rest == 1) {
+            if (block instanceof DataItem && isOptionalPayload(context.type) && typeof(block.value) == 'number') {
+                return block.value === 0;
+            }
+            var isEnd = (context.type != '');
+            context.type = block.type;
+            context.rest = getTypeMinLength(block.type) - 1;
+            return isEnd || context.rest == 0;
+        }
+        context.rest--;
+        return false;
+    }
+
+    function semanticMarkup(items) {
+        var markup = Types.ArrayBegin + Types.ArrayEnd + Types.ObjectBegin + Types.ObjectEnd;
+        var known = '';
+        for (var k in Types) {
+            known += Types[k];
+        }
+        var nesting = [];
+        var semantics = Semantics.Unknown;
+        var context = { type: '', rest: 0 };
+        var count = items.length;
+        for (var i = 0; i < count; i++) {
+            var block = items[i];
+            if (known.indexOf(block.type) == -1) {
+                block.semantic = Semantics.UnknownType;
+            } else if (markup.indexOf(block.type) >= 0) {
+                block.semantic = Semantics.Markup;
+                context.type = '';
+                switch(block.type) {
+                    case Types.ArrayBegin:
+                    case Types.ObjectBegin:
+                        nesting.push(block.type);
+                        break;
+                    case Types.ArrayEnd:
+                        if (nesting.pop() != Types.ArrayBegin)
+                            return;
+                    case Types.ObjectEnd:
+                        if (nesting.pop() != Types.ObjectBegin)
+                            return;
+                }
+            } else {
+                var scope = nesting[nesting.length - 1] || '';
+                if (scope == Types.ArrayBegin) {
+                    semantics = Semantics.ArrayItem;
+                    block.semantic = semantics;
+                    if (moveNextRecord(block, context)) {
+                        block.semantic |= Semantics.LastArrayItemFlag;
+                    }
+                } else {
+                    switch (semantics) {
+                        case Semantics.ArrayItem:
+                            semantics = Semantics.Key;
+                            block.semantic = semantics;
+                            break;
+                        case Semantics.Key:
+                        case Semantics.Unknown:
+                            block.semantic = Semantics.Key;
+                            if (block.type == Types.String && block instanceof DataItem) {
+                                semantics = Semantics.Value;
+                                context.type = '';
+                            }
+                            break;
+
+                        case Semantics.Value:
+                            block.semantic = semantics;
+                            if (moveNextRecord(block, context)) {
+                                semantics = Semantics.Key;
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+    }
 
 //------------------------------------------------------------------------------
 
@@ -165,7 +305,7 @@ var UbjsonTestSuiteCore = (function (core) {
                 }
                 break;
             case 'string':
-                this.serializeString(entity, true, true);
+                this.serializeString(entity, true, true, false);
                 break;
             case 'number':
                 this.serializeNumber(entity, false);
@@ -199,7 +339,7 @@ var UbjsonTestSuiteCore = (function (core) {
         for(var i = 0; i < count; i++) {
             var key = keys[i];
             this.setCurrentSemantic(Semantics.Key);
-            this.serializeString(key, false, false);
+            this.serializeString(key, false, false, false);
             this.setCurrentSemantic(Semantics.Value);
             this.serializeEntity(object[key]);
         }
@@ -207,7 +347,7 @@ var UbjsonTestSuiteCore = (function (core) {
         this.addTagItem(Types.ObjectEnd);
     }
 
-    ObjectSerializer.prototype.serializeString = function(string, emitStringType, charOptimization) {
+    ObjectSerializer.prototype.serializeString = function(string, emitStringType, charOptimization, asHighNumber) {
         if (charOptimization && string.length == 1) {
             var ch = string.charCodeAt(0);
             if (ch < 128) {
@@ -223,7 +363,8 @@ var UbjsonTestSuiteCore = (function (core) {
         }
         this.serializeNumber(size, true);
         if (size > 0) {
-            this.addDataItem(Types.String, utf8value).displayValue = string;
+            var type = asHighNumber ? Types.HighNumber : Types.String;
+            this.addDataItem(type, utf8value).displayValue = string;
         }
     }
 
@@ -235,7 +376,7 @@ var UbjsonTestSuiteCore = (function (core) {
         this.addTagItem(type);
         if (type != Types.Null) {
             if (type == Types.HighNumber) {
-                this.serializeString(number.toString(), false, false);
+                this.serializeString(number.toString(), false, false, true);
             } else {
                 this.addDataItem(type, number);
             }
@@ -273,10 +414,12 @@ var UbjsonTestSuiteCore = (function (core) {
         this.formalized = false;
         this.highlight = true;
         this.styles = {
-                markup: "color: green",
-                key: "color: blue",
-                value: "color: red",
-                arrayItem: "color: orange"
+                unknown: 'color: black',
+                markup: 'color: green',
+                key: 'color: blue',
+                value: 'color: red',
+                arrayItem: 'color: orange',
+                unknownType: 'color: red; text-decoration: underline'
             };
     }
 
@@ -328,18 +471,19 @@ var UbjsonTestSuiteCore = (function (core) {
     }
 
     BlocksTextRenderer.prototype.renderTagBlock = function(block, id) {
+        var type = this.formalized ? escapeBlockText(block.type) : block.type;
         if (this.highlight) {
             var style = this.getStyle(block);
-            return '<span id="' + id + '" style="' + style + '">[' + block.type + ']</span>';
+            return '<span id="' + id + '" style="' + style + '">[' + type + ']</span>';
         } else {
-            return '[' + block.type + ']';
+            return '[' + type + ']';
         }
     }
 
     BlocksTextRenderer.prototype.renderDataBlock = function(block, id) {
         var value = (block.displayValue != null) ? block.displayValue : block.value;
         if (this.formalized) {
-            value = block.type + ':' + value;
+            value = block.type + ':' + escapeBlockText(value.toString());
         }
         if (this.highlight) {
             var style = this.getStyle(block);
@@ -352,6 +496,8 @@ var UbjsonTestSuiteCore = (function (core) {
     BlocksTextRenderer.prototype.getStyle = function(block) {
         var semantic = (block.semantic & Semantics.LowValuesMask);
         switch (semantic) {
+            case Semantics.Unknown:
+                return this.styles.unknown;
             case Semantics.Markup:
                 return this.styles.markup;
             case Semantics.Key:
@@ -360,6 +506,8 @@ var UbjsonTestSuiteCore = (function (core) {
                 return this.styles.value;
             case Semantics.ArrayItem:
                 return this.styles.arrayItem;
+            case Semantics.UnknownType:
+                return this.styles.unknownType;
             default:
                 throw new Error('Unknown semantic code "' + semantic + '"');
         }
@@ -404,6 +552,7 @@ var UbjsonTestSuiteCore = (function (core) {
         } else {
             switch (block.type) {
                 case Types.String:
+                case Types.HighNumber:
                     this.binary += block.value;
                     break;
                 case Types.Char:
@@ -522,10 +671,52 @@ var UbjsonTestSuiteCore = (function (core) {
 
 //------------------------------------------------------------------------------
 
+    function BlocksTextParser() {
+    }
+
+    BlocksTextParser.prototype.parse = function(text) {
+        var items = [];
+        var begin = -1;
+        var escape = false;
+        var count = text.length;
+        for (var i = 0; i < count; i++) {
+            var ch = text[i];
+            if (ch == '[' && !escape) {
+                if (begin >= 0)
+                    throw new Error('Unexpected "[" symbol at position ' + i);
+                begin = i;
+            } else if (ch == ']' && !escape) {
+                if (begin == -1)
+                    throw new Error('Unexpected "]" symbol at position ' + i);
+                var data = text.substring(begin + 1, i);
+                var trimmed = unescapeBlockText(data).trim();
+                var item;
+                if (trimmed.length == 1) {
+                    item = new TagItem(Semantics.Unknown, trimmed[0]);
+                } else if (trimmed.length > 1 && trimmed[1] == ':') {
+                    var type = trimmed[0];
+                    var value = data.replace(/^\s+/, '').substring(2);
+                    value = parseBlockValue(type, value);
+                    item = new DataItem(Semantics.Unknown, type, value);
+                } else {
+                    throw new Error('Unknown block');
+                }
+                items.push(item);
+                begin = -1;
+            }
+            escape = (ch == '\\' && !escape);
+        }
+        semanticMarkup(items);
+        return items;
+    }
+
+//------------------------------------------------------------------------------
+
     core.ObjectSerializer = ObjectSerializer;
     core.BlocksTextRenderer = BlocksTextRenderer;
     core.BinaryWriter = BinaryWriter;
     core.HexRenderer = HexRenderer;
+    core.BlocksTextParser = BlocksTextParser;
 
     return core;
 
