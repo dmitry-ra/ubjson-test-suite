@@ -114,6 +114,22 @@ var UbjsonTestSuiteCore = (function (core) {
         return text.replace(/\\]/g, ']').replace(/\\\[/g, '[').replace(/\\\\/g, '\\');
     }
 
+    function parseBlockValue(type, value) {
+        switch (type) {
+            case Types.Int8:
+            case Types.UInt8:
+            case Types.Int16:
+            case Types.Int32:
+            case Types.Int64:
+                return parseInt(value, 10);
+
+            case Types.Float32:
+            case Types.Float64:
+                return parseFloat(value);
+        }
+        return value;
+    }
+
 //------------------------------------------------------------------------------
 
     function BlockItem() {
@@ -150,7 +166,7 @@ var UbjsonTestSuiteCore = (function (core) {
             case Types.Noop:
             case Types.True:
             case Types.False:
-                return 0;
+                return 1;
 
             case Types.Char:
             case Types.Int8:
@@ -160,11 +176,11 @@ var UbjsonTestSuiteCore = (function (core) {
             case Types.Int64:
             case Types.Float32:
             case Types.Float64:
-                return 1;
+                return 2;
 
             case Types.String:
             case Types.HighNumber:
-                return 2;
+                return 3;
         }
         return 0;
     }
@@ -179,16 +195,14 @@ var UbjsonTestSuiteCore = (function (core) {
     }
 
     function moveNextRecord(block, context) {
-        if (block instanceof TagItem) {
-            if (context.rest <= 0) {
-                var end = (context.type != '');
-                context.type = block.type;
-                context.rest = getTypeMinLength(block.type);
-                return end;
+        if (context.type == '' || context.rest == 1) {
+            if (block instanceof DataItem && isOptionalPayload(context.type) && typeof(block.value) == 'number') {
+                return block.value === 0;
             }
-        } else {
-            if (context.rest == 0 && isOptionalPayload(context.type))
-                return false;
+            var isEnd = (context.type != '');
+            context.type = block.type;
+            context.rest = getTypeMinLength(block.type) - 1;
+            return isEnd || context.rest == 0;
         }
         context.rest--;
         return false;
@@ -247,10 +261,10 @@ var UbjsonTestSuiteCore = (function (core) {
                             break;
 
                         case Semantics.Value:
+                            block.semantic = semantics;
                             if (moveNextRecord(block, context)) {
                                 semantics = Semantics.Key;
                             }
-                            block.semantic = semantics;
                             break;
                     }
                 }
@@ -291,7 +305,7 @@ var UbjsonTestSuiteCore = (function (core) {
                 }
                 break;
             case 'string':
-                this.serializeString(entity, true, true);
+                this.serializeString(entity, true, true, false);
                 break;
             case 'number':
                 this.serializeNumber(entity, false);
@@ -325,7 +339,7 @@ var UbjsonTestSuiteCore = (function (core) {
         for(var i = 0; i < count; i++) {
             var key = keys[i];
             this.setCurrentSemantic(Semantics.Key);
-            this.serializeString(key, false, false);
+            this.serializeString(key, false, false, false);
             this.setCurrentSemantic(Semantics.Value);
             this.serializeEntity(object[key]);
         }
@@ -333,7 +347,7 @@ var UbjsonTestSuiteCore = (function (core) {
         this.addTagItem(Types.ObjectEnd);
     }
 
-    ObjectSerializer.prototype.serializeString = function(string, emitStringType, charOptimization) {
+    ObjectSerializer.prototype.serializeString = function(string, emitStringType, charOptimization, asHighNumber) {
         if (charOptimization && string.length == 1) {
             var ch = string.charCodeAt(0);
             if (ch < 128) {
@@ -349,7 +363,8 @@ var UbjsonTestSuiteCore = (function (core) {
         }
         this.serializeNumber(size, true);
         if (size > 0) {
-            this.addDataItem(Types.String, utf8value).displayValue = string;
+            var type = asHighNumber ? Types.HighNumber : Types.String;
+            this.addDataItem(type, utf8value).displayValue = string;
         }
     }
 
@@ -361,7 +376,7 @@ var UbjsonTestSuiteCore = (function (core) {
         this.addTagItem(type);
         if (type != Types.Null) {
             if (type == Types.HighNumber) {
-                this.serializeString(number.toString(), false, false);
+                this.serializeString(number.toString(), false, false, true);
             } else {
                 this.addDataItem(type, number);
             }
@@ -537,6 +552,7 @@ var UbjsonTestSuiteCore = (function (core) {
         } else {
             switch (block.type) {
                 case Types.String:
+                case Types.HighNumber:
                     this.binary += block.value;
                     break;
                 case Types.Char:
@@ -678,8 +694,10 @@ var UbjsonTestSuiteCore = (function (core) {
                 if (trimmed.length == 1) {
                     item = new TagItem(Semantics.Unknown, trimmed[0]);
                 } else if (trimmed.length > 1 && trimmed[1] == ':') {
+                    var type = trimmed[0];
                     var value = data.replace(/^\s+/, '').substring(2);
-                    item = new DataItem(Semantics.Unknown, trimmed[0], value);
+                    value = parseBlockValue(type, value);
+                    item = new DataItem(Semantics.Unknown, type, value);
                 } else {
                     throw new Error('Unknown block');
                 }
