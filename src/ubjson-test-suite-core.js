@@ -195,14 +195,17 @@ var UbjsonTestSuiteCore = (function (core) {
     }
 
     function moveNextRecord(block, context) {
-        if (context.type == '' || context.rest == 1) {
-            if (block instanceof DataItem && isOptionalPayload(context.type) && typeof(block.value) == 'number') {
+        if (context.type == '' || context.rest <= 1) {
+            if (context.rest == 1 && block instanceof DataItem && isOptionalPayload(context.type) && typeof(block.value) == 'number') {
                 return block.value === 0;
             }
             var isEnd = (context.type != '');
-            context.type = block.type;
-            context.rest = getTypeMinLength(block.type) - 1;
-            return isEnd || context.rest == 0;
+            if (block instanceof TagItem) {
+                context.type = block.type;
+                context.rest = getTypeMinLength(block.type) - 1;
+                isEnd |= context.rest == 0;
+            }
+            return isEnd;
         }
         context.rest--;
         return false;
@@ -221,8 +224,10 @@ var UbjsonTestSuiteCore = (function (core) {
         for (var i = 0; i < count; i++) {
             var block = items[i];
             if (known.indexOf(block.type) == -1) {
+                semantics = Semantics.UnknownType;
                 block.semantic = Semantics.UnknownType;
             } else if (markup.indexOf(block.type) >= 0) {
+                semantics = Semantics.Markup;
                 block.semantic = Semantics.Markup;
                 context.type = '';
                 switch(block.type) {
@@ -233,9 +238,11 @@ var UbjsonTestSuiteCore = (function (core) {
                     case Types.ArrayEnd:
                         if (nesting.pop() != Types.ArrayBegin)
                             return;
+                        break;
                     case Types.ObjectEnd:
                         if (nesting.pop() != Types.ObjectBegin)
                             return;
+                        break;
                 }
             } else {
                 var scope = nesting[nesting.length - 1] || '';
@@ -244,9 +251,11 @@ var UbjsonTestSuiteCore = (function (core) {
                     block.semantic = semantics;
                     if (moveNextRecord(block, context)) {
                         block.semantic |= Semantics.LastArrayItemFlag;
+                        context.type = '';
                     }
                 } else {
                     switch (semantics) {
+                        case Semantics.Markup:
                         case Semantics.ArrayItem:
                             semantics = Semantics.Key;
                             block.semantic = semantics;
@@ -276,7 +285,6 @@ var UbjsonTestSuiteCore = (function (core) {
 
     function ObjectSerializer() {
         this.items = [];
-        this.currentSemantic = Semantics.Markup;
         var buffer = new ArrayBuffer(4);
         this.floatDataView = new DataView(buffer);
     }
@@ -288,6 +296,7 @@ var UbjsonTestSuiteCore = (function (core) {
         } else {
             throw new Error('Root object must be an Array or Object instance');
         }
+        semanticMarkup(this.items);
         return this.items;
     }
 
@@ -319,31 +328,23 @@ var UbjsonTestSuiteCore = (function (core) {
     }
 
     ObjectSerializer.prototype.serializeArray = function(array) {
-        this.setCurrentSemantic(Semantics.Markup);
         this.addTagItem(Types.ArrayBegin);
         var count = array.length;
         for(var i = 0; i < count; i++) {
-            this.setCurrentSemantic(Semantics.ArrayItem);
             this.serializeEntity(array[i]);
-            this.items[this.items.length - 1].semantic |= Semantics.LastArrayItemFlag;
         }
-        this.setCurrentSemantic(Semantics.Markup);
         this.addTagItem(Types.ArrayEnd);
     }
 
     ObjectSerializer.prototype.serializeObject = function(object) {
-        this.setCurrentSemantic(Semantics.Markup);
         this.addTagItem(Types.ObjectBegin);
         var keys = Object.keys(object);
         var count = keys.length;
         for(var i = 0; i < count; i++) {
             var key = keys[i];
-            this.setCurrentSemantic(Semantics.Key);
             this.serializeString(key, false, false, false);
-            this.setCurrentSemantic(Semantics.Value);
             this.serializeEntity(object[key]);
         }
-        this.setCurrentSemantic(Semantics.Markup);
         this.addTagItem(Types.ObjectEnd);
     }
 
@@ -392,19 +393,15 @@ var UbjsonTestSuiteCore = (function (core) {
     }
 
     ObjectSerializer.prototype.addTagItem = function(type) {
-        var item = new TagItem(this.currentSemantic, type);
+        var item = new TagItem(Semantics.Unknown, type);
         this.items.push(item);
         return item;
     }
 
     ObjectSerializer.prototype.addDataItem = function(type, value) {
-        var item = new DataItem(this.currentSemantic, type, value);
+        var item = new DataItem(Semantics.Unknown, type, value);
         this.items.push(item);
         return item;
-    }
-
-    ObjectSerializer.prototype.setCurrentSemantic = function(semantic) {
-        this.currentSemantic = semantic;
     }
 
 //------------------------------------------------------------------------------
