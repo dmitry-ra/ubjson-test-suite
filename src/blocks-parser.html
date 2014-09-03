@@ -185,12 +185,18 @@
 
             window.onload = function() {
                 var hash = decodeURIComponent(window.location.href.split('#')[1] || '');
+                var reformat = false;
                 if (hash) {
                     document.getElementById('txt-input').value = hash;
+                    reformat = true;
                 } else {
                     document.getElementById('txt-input').value = '[{]\n    [i][i:6][S:answer][i][i:42]\n[}]';
                 }
                 forcedRefresh();
+                if (reformat) {
+                    var disp = document.getElementById('block-disp');
+                    document.getElementById('txt-input').value = disp.innerText || disp.textContent;
+                }
             }
         </script>
     </body>
