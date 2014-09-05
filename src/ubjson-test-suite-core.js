@@ -41,11 +41,12 @@ var UbjsonTestSuiteCore = (function (core) {
 
     var Semantics = {
         Unknown: 0,
-        Markup: 1,
-        Key: 2,
-        Value: 3,
-        ArrayItem: 4,
-        UnknownType: 5,
+        UnknownType: 1,
+        Markup: 2,
+        Key: 3,
+        Value: 4,
+        ArrayItem: 5,
+        ContainerParameter: 6,
         LowValuesMask: 0xFF,
         LastArrayItemFlag: 0x100
     };
@@ -170,8 +171,10 @@ var UbjsonTestSuiteCore = (function (core) {
             case Types.Int64:
             case Types.Float32:
             case Types.Float64:
+            case Types.Type:
                 return 2;
 
+            case Types.Count:
             case Types.String:
             case Types.HighNumber:
                 return 3;
@@ -207,6 +210,7 @@ var UbjsonTestSuiteCore = (function (core) {
 
     function semanticMarkup(items) {
         var markup = Types.ArrayBegin + Types.ArrayEnd + Types.ObjectBegin + Types.ObjectEnd;
+        var parameters = Types.Type + Types.Count;
         var known = '';
         for (var k in Types) {
             known += Types[k];
@@ -224,6 +228,11 @@ var UbjsonTestSuiteCore = (function (core) {
             if (known.indexOf(block.type) == -1) {
                 currentSemantic = Semantics.UnknownType;
                 semantics[i] = Semantics.UnknownType;
+            } else if (parameters.indexOf(block.type) >= 0) {
+                currentSemantic = Semantics.ContainerParameter;
+                semantics[i] = Semantics.ContainerParameter;
+                context.type = '';
+                moveNextRecord(block, context);
             } else if (markup.indexOf(block.type) >= 0) {
                 currentSemantic = Semantics.Markup;
                 semantics[i] = Semantics.Markup;
@@ -244,6 +253,15 @@ var UbjsonTestSuiteCore = (function (core) {
                 }
             } else {
                 var scope = nesting[nesting.length - 1] || '';
+                if (currentSemantic == Semantics.ContainerParameter) {
+                    semantics[i] = Semantics.ContainerParameter;
+                    if (moveNextRecord(block, context)) {
+                        console.log('CT: ' + context.type + ', V: ' + block.value);
+                        currentSemantic = Semantics.Unknown;
+                        context.type = '';
+                    }
+                    continue;
+                }
                 if (scope == Types.ArrayBegin) {
                     currentSemantic = Semantics.ArrayItem;
                     semantics[i] = Semantics.ArrayItem;
@@ -260,6 +278,7 @@ var UbjsonTestSuiteCore = (function (core) {
                             break;
                         case Semantics.Key:
                         case Semantics.Unknown:
+                            currentSemantic = Semantics.Key;
                             semantics[i] = Semantics.Key;
                             if (block.type == Types.String && block instanceof DataItem) {
                                 currentSemantic = Semantics.Value;
@@ -410,11 +429,12 @@ var UbjsonTestSuiteCore = (function (core) {
         this.highlight = true;
         this.styles = {
                 unknown: 'color: black',
+                unknownType: 'color: red; text-decoration: underline',
                 markup: 'color: green',
                 key: 'color: blue',
                 value: 'color: red',
                 arrayItem: 'color: orange',
-                unknownType: 'color: red; text-decoration: underline'
+                containerParameter: 'color: green; text-decoration: underline'
             };
     }
 
@@ -497,6 +517,8 @@ var UbjsonTestSuiteCore = (function (core) {
         switch (semantic) {
             case Semantics.Unknown:
                 return this.styles.unknown;
+            case Semantics.UnknownType:
+                return this.styles.unknownType;
             case Semantics.Markup:
                 return this.styles.markup;
             case Semantics.Key:
@@ -505,8 +527,8 @@ var UbjsonTestSuiteCore = (function (core) {
                 return this.styles.value;
             case Semantics.ArrayItem:
                 return this.styles.arrayItem;
-            case Semantics.UnknownType:
-                return this.styles.unknownType;
+            case Semantics.ContainerParameter:
+                return this.styles.containerParameter;
             default:
                 throw new Error('Unknown semantic code "' + semantic + '"');
         }
