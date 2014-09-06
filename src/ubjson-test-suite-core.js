@@ -191,18 +191,25 @@ var UbjsonTestSuiteCore = (function (core) {
         return false;
     }
 
+    function clearContext(context) {
+        context.type = '';
+        context.rest = 0;
+    }
+
     function moveNextRecord(block, context) {
-        if (context.type == '' || context.rest <= 1) {
+        if (context.type == '' || context.rest == 1) {
+            //first or last block of record
             if (context.rest == 1 && block instanceof DataItem && isOptionalPayload(context.type) && typeof(block.value) == 'number') {
+                //length of the record with optional payload (hold the rest value of 1)
                 return block.value === 0;
             }
-            var isEnd = (context.type != '');
-            if (block instanceof TagItem) {
+            var isLastBlock = (context.type != '');
+            if (!isLastBlock && block instanceof TagItem) {
                 context.type = block.type;
                 context.rest = getTypeMinLength(block.type) - 1;
-                isEnd |= context.rest == 0;
+                isLastBlock = (context.rest == 0);
             }
-            return isEnd;
+            return isLastBlock;
         }
         context.rest--;
         return false;
@@ -231,12 +238,12 @@ var UbjsonTestSuiteCore = (function (core) {
             } else if (parameters.indexOf(block.type) >= 0) {
                 currentSemantic = Semantics.ContainerParameter;
                 semantics[i] = Semantics.ContainerParameter;
-                context.type = '';
+                clearContext(context);
                 moveNextRecord(block, context);
             } else if (markup.indexOf(block.type) >= 0) {
                 currentSemantic = Semantics.Markup;
                 semantics[i] = Semantics.Markup;
-                context.type = '';
+                clearContext(context);
                 switch(block.type) {
                     case Types.ArrayBegin:
                     case Types.ObjectBegin:
@@ -255,10 +262,16 @@ var UbjsonTestSuiteCore = (function (core) {
                 var scope = nesting[nesting.length - 1] || '';
                 if (currentSemantic == Semantics.ContainerParameter) {
                     semantics[i] = Semantics.ContainerParameter;
+                    if (context.type == Types.Count && context.rest == 2) {
+                        //console.log('Container Size Number Type: ' + block.type);
+                    }
                     if (moveNextRecord(block, context)) {
-                        console.log('CT: ' + context.type + ', V: ' + block.value);
+                        //if (context.type == Types.Type)
+                        //    console.log('Container Type: ' + block.type);
+                        //else
+                        //    console.log('Container Size: ' + block.value);
                         currentSemantic = Semantics.Unknown;
-                        context.type = '';
+                        clearContext(context);
                     }
                     continue;
                 }
@@ -267,7 +280,7 @@ var UbjsonTestSuiteCore = (function (core) {
                     semantics[i] = Semantics.ArrayItem;
                     if (moveNextRecord(block, context)) {
                         semantics[i] |= Semantics.LastArrayItemFlag;
-                        context.type = '';
+                        clearContext(context);
                     }
                 } else {
                     switch (currentSemantic) {
@@ -282,7 +295,7 @@ var UbjsonTestSuiteCore = (function (core) {
                             semantics[i] = Semantics.Key;
                             if (block.type == Types.String && block instanceof DataItem) {
                                 currentSemantic = Semantics.Value;
-                                context.type = '';
+                                clearContext(context);
                             }
                             break;
 
