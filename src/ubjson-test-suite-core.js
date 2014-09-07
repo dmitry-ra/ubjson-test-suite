@@ -241,6 +241,9 @@ var UbjsonTestSuiteCore = (function (core) {
                 clearContext(context);
                 moveNextRecord(block, context);
             } else if (markup.indexOf(block.type) >= 0) {
+                if (context.type == Types.Type && context.rest == 1) {
+                    throw new Error('Optimized nested containers not supported');
+                }
                 currentSemantic = Semantics.Markup;
                 semantics[i] = Semantics.Markup;
                 clearContext(context);
@@ -269,8 +272,6 @@ var UbjsonTestSuiteCore = (function (core) {
                     if (moveNextRecord(block, context)) {
                         if (context.type == Types.Count) {
                             scope.containerSize = block.value;
-                            //console.log('[OPT] containerSizeNumberType: ' + scope.containerSizeNumberType +
-                            //    ', containerSize: ' + scope.containerSize + ', containerType: ' + scope.containerType);
                         } else {
                             scope.containerType = block.type;
                         }

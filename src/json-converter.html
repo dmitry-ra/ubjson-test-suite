@@ -80,26 +80,16 @@
             var blocksMap = [];
             function updateData(jsonText)
             {
-                var parseResult = {};
                 try {
                     var value = JSON.parse(jsonText);
                     var serializer = new UbjsonTestSuiteCore.ObjectSerializer();
-                    parseResult.items = serializer.serialize(value);
-                    parseResult.success = true;
-                } catch(error) {
-                    parseResult.success = false;
-                    parseResult.error = error;
-                }
-
-                if (parseResult.success) {
-                    setOK('json-status', true);
-                    document.getElementById('json-status').innerHTML = 'OK';
+                    var items = serializer.serialize(value);
 
                     var highlight = document.getElementById('checkbox-highlight').checked;
                     var renderer = new UbjsonTestSuiteCore.BlocksTextRenderer();
                     renderer.highlight = highlight;
                     renderer.formalized = document.getElementById('checkbox-formalized').checked;
-                    document.getElementById('block-disp').innerHTML = renderer.render(parseResult.items);
+                    document.getElementById('block-disp').innerHTML = renderer.render(items);
 
                     blocksMap = null;
                     var writer = new UbjsonTestSuiteCore.BinaryWriter();
@@ -109,7 +99,7 @@
                             blocksMap.push({ id: id, start: offset });
                         }
                     }
-                    writer.writeBlocks(parseResult.items);
+                    writer.writeBlocks(items);
 
                     var hexRenderer = new UbjsonTestSuiteCore.HexRenderer();
                     var hex = hexRenderer.renderBinaryString(writer.binary, blocksMap);
@@ -119,11 +109,15 @@
                     dl.href = 'data:application/ubjson;base64,' + btoa(writer.binary);
                     dl.download = 'data_' + (new Date()).toISOString().replace(/:/g, '_') + '.ubj';
                     dl.innerHTML = 'Download binary (' + writer.binary.length + ' bytes)';
-                } else {
+
+                    setOK('json-status', true);
+                    document.getElementById('json-status').innerHTML = 'OK';
+                } catch(error) {
                     setOK('json-status', false);
-                    document.getElementById('json-status').innerHTML = parseResult.error;
+                    document.getElementById('json-status').innerHTML = error;
                 }
             }
+
             var inp = document.getElementById('txt-input');
             inp.onkeyup = onTextChange;
             inp.onchange = onTextChange;
