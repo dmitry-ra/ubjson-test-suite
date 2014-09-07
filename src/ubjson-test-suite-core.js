@@ -247,35 +247,39 @@ var UbjsonTestSuiteCore = (function (core) {
                 switch(block.type) {
                     case Types.ArrayBegin:
                     case Types.ObjectBegin:
-                        nesting.push(block.type);
+                        var scope = { scopeType: block.type };
+                        nesting.push(scope);
                         break;
                     case Types.ArrayEnd:
-                        if (nesting.pop() != Types.ArrayBegin)
+                        if (nesting.pop().scopeType != Types.ArrayBegin)
                             return semantics;
                         break;
                     case Types.ObjectEnd:
-                        if (nesting.pop() != Types.ObjectBegin)
+                        if (nesting.pop().scopeType != Types.ObjectBegin)
                             return semantics;
                         break;
                 }
             } else {
-                var scope = nesting[nesting.length - 1] || '';
+                var scope = nesting[nesting.length - 1] || { scopeType: '' };
                 if (currentSemantic == Semantics.ContainerParameter) {
                     semantics[i] = Semantics.ContainerParameter;
                     if (context.type == Types.Count && context.rest == 2) {
-                        //console.log('Container Size Number Type: ' + block.type);
+                        scope.containerSizeNumberType = block.type;
                     }
                     if (moveNextRecord(block, context)) {
-                        //if (context.type == Types.Type)
-                        //    console.log('Container Type: ' + block.type);
-                        //else
-                        //    console.log('Container Size: ' + block.value);
+                        if (context.type == Types.Count) {
+                            scope.containerSize = block.value;
+                            //console.log('[OPT] containerSizeNumberType: ' + scope.containerSizeNumberType +
+                            //    ', containerSize: ' + scope.containerSize + ', containerType: ' + scope.containerType);
+                        } else {
+                            scope.containerType = block.type;
+                        }
                         currentSemantic = Semantics.Unknown;
                         clearContext(context);
                     }
                     continue;
                 }
-                if (scope == Types.ArrayBegin) {
+                if (scope.scopeType == Types.ArrayBegin) {
                     currentSemantic = Semantics.ArrayItem;
                     semantics[i] = Semantics.ArrayItem;
                     if (moveNextRecord(block, context)) {
