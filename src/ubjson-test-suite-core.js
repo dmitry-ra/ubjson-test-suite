@@ -48,7 +48,9 @@ var UbjsonTestSuiteCore = (function (core) {
         ArrayItem: 5,
         ContainerParameter: 6,
         LowValuesMask: 0xFF,
-        LastArrayItemFlag: 0x100
+        LastArrayItemFlag: 0x100,
+        LastContainerParameterFlag: 0x200,
+        LastContainerItemFlag: 0x400
     };
 
 //------------------------------------------------------------------------------
@@ -196,7 +198,16 @@ var UbjsonTestSuiteCore = (function (core) {
         context.rest = 0;
     }
 
-    function moveNextRecord(block, context) {
+    function moveNextItem(scope) {
+        if (scope.containerCounter > 0) {
+            scope.containerCounter--;
+            return scope.containerCounter === 0;
+        }
+        return false;
+    }
+
+    function moveNextRecord(block, context, omitType) {
+        omitType = !!omitType;
         if (context.type == '' || context.rest == 1) {
             //first or last block of record
             if (context.rest == 1 && block instanceof DataItem && isOptionalPayload(context.type) && typeof(block.value) == 'number') {
@@ -204,9 +215,12 @@ var UbjsonTestSuiteCore = (function (core) {
                 return block.value === 0;
             }
             var isLastBlock = (context.type != '');
-            if (!isLastBlock && block instanceof TagItem) {
+            if (!isLastBlock && (block instanceof TagItem || omitType)) {
                 context.type = block.type;
                 context.rest = getTypeMinLength(block.type) - 1;
+                if (omitType && context.rest - 1 >= 0) {
+                    context.rest--;
+                }
                 isLastBlock = (context.rest == 0);
             }
             return isLastBlock;
@@ -272,6 +286,14 @@ var UbjsonTestSuiteCore = (function (core) {
                     if (moveNextRecord(block, context)) {
                         if (context.type == Types.Count) {
                             scope.containerSize = block.value;
+                            semantics[i] |= Semantics.LastContainerParameterFlag;
+                            if (scope.containerSize >= 0) {
+                                if (scope.containerSize == 0) {
+                                    semantics[i] |= Semantics.LastContainerItemFlag;
+                                } else {
+                                    scope.containerCounter = scope.containerSize;
+                                }
+                            }
                         } else {
                             scope.containerType = block.type;
                         }
@@ -280,11 +302,16 @@ var UbjsonTestSuiteCore = (function (core) {
                     }
                     continue;
                 }
+                var omitType = !!scope.containerType;
                 if (scope.scopeType == Types.ArrayBegin) {
                     currentSemantic = Semantics.ArrayItem;
                     semantics[i] = Semantics.ArrayItem;
-                    if (moveNextRecord(block, context)) {
+                    if (moveNextRecord(block, context, omitType)) {
                         semantics[i] |= Semantics.LastArrayItemFlag;
+                        if (moveNextItem(scope)) {
+                            semantics[i] |= Semantics.LastContainerItemFlag;
+                            nesting.pop();
+                        }
                         clearContext(context);
                     }
                 } else {
@@ -303,11 +330,14 @@ var UbjsonTestSuiteCore = (function (core) {
                                 clearContext(context);
                             }
                             break;
-
                         case Semantics.Value:
                             semantics[i] = currentSemantic;
-                            if (moveNextRecord(block, context)) {
+                            if (moveNextRecord(block, context, omitType)) {
                                 currentSemantic = Semantics.Key;
+                                if (moveNextItem(scope)) {
+                                    semantics[i] |= Semantics.LastContainerItemFlag;
+                                    nesting.pop();
+                                }
                             }
                             break;
                     }
@@ -471,35 +501,41 @@ var UbjsonTestSuiteCore = (function (core) {
             var block = items[i];
             var semantic = semantics[i];
             var id = this.BlockIdPrefix + i;
-            if (block instanceof TagItem) {
-                if (block.type == Types.ObjectEnd || block.type == Types.ArrayEnd) {
-                    indent = this.getIndent(--nestingLevel);
-                    startNewLine = prevBlock != null && prevBlock.type != Types.ObjectBegin && prevBlock.type != Types.ArrayBegin;
-                }
-                if (prevBlock != null) {
-                    if ((prevSemantic & Semantics.LastArrayItemFlag) == Semantics.LastArrayItemFlag) {
-                        startNewLine = true;
-                    }
-                    var prevBlockSemantic = prevSemantic & Semantics.LowValuesMask;
-                    var blockSemantic = semantic & Semantics.LowValuesMask;
-                    if (prevBlockSemantic == Semantics.Value && blockSemantic == Semantics.Key) {
-                        startNewLine = true;
-                    }
-                    if (prevBlock.type == Types.ObjectEnd || prevBlock.type == Types.ArrayEnd) {
-                        startNewLine = true;
-                    }
-                }
-                if (startNewLine) {
-                    text += '\n' + indent;
-                    startNewLine = false;
-                }
-                text += this.renderTagBlock(block, id, semantic);
-                if (block.type == Types.ObjectBegin || block.type == Types.ArrayBegin) {
-                    indent = this.getIndent(++nestingLevel);
+            if (block.type == Types.ObjectEnd || block.type == Types.ArrayEnd) {
+                indent = this.getIndent(--nestingLevel);
+                startNewLine = prevBlock != null && prevBlock.type != Types.ObjectBegin && prevBlock.type != Types.ArrayBegin;
+            }
+            if (prevBlock != null) {
+                if ((prevSemantic & Semantics.LastArrayItemFlag) == Semantics.LastArrayItemFlag) {
                     startNewLine = true;
                 }
+                if ((prevSemantic & Semantics.LastContainerParameterFlag) == Semantics.LastContainerParameterFlag) {
+                    startNewLine = true;
+                }
+                var prevBlockSemantic = prevSemantic & Semantics.LowValuesMask;
+                var blockSemantic = semantic & Semantics.LowValuesMask;
+                if (prevBlockSemantic == Semantics.Value && blockSemantic == Semantics.Key) {
+                    startNewLine = true;
+                }
+                if (prevBlock.type == Types.ObjectEnd || prevBlock.type == Types.ArrayEnd) {
+                    startNewLine = true;
+                }
+            }
+            if (startNewLine) {
+                text += '\n' + indent;
+                startNewLine = false;
+            }
+            if (block instanceof TagItem) {
+                text += this.renderTagBlock(block, id, semantic);
             } else {
                 text += this.renderDataBlock(block, id, semantic);
+            }
+            if ((semantic & Semantics.LastContainerItemFlag) == Semantics.LastContainerItemFlag) {
+                indent = this.getIndent(--nestingLevel);
+            }
+            if (block.type == Types.ObjectBegin || block.type == Types.ArrayBegin) {
+                indent = this.getIndent(++nestingLevel);
+                startNewLine = true;
             }
             prevBlock = block;
             prevSemantic = semantic;
