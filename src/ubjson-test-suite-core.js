@@ -229,6 +229,14 @@ var UbjsonTestSuiteCore = (function (core) {
         return false;
     }
 
+    function nestingPop(nesting, expectedScopeType) {
+        var scope = nesting.pop();
+        if (scope) {
+            return scope.scopeType === expectedScopeType;
+        }
+        return false;
+    }
+
     function semanticMarkup(items) {
         var markup = Types.ArrayBegin + Types.ArrayEnd + Types.ObjectBegin + Types.ObjectEnd;
         var parameters = Types.Type + Types.Count;
@@ -268,11 +276,11 @@ var UbjsonTestSuiteCore = (function (core) {
                         nesting.push(scope);
                         break;
                     case Types.ArrayEnd:
-                        if (nesting.pop().scopeType != Types.ArrayBegin)
+                        if (!nestingPop(nesting, Types.ArrayBegin))
                             return semantics;
                         break;
                     case Types.ObjectEnd:
-                        if (nesting.pop().scopeType != Types.ObjectBegin)
+                        if (!nestingPop(nesting, Types.ObjectBegin))
                             return semantics;
                         break;
                 }
@@ -310,7 +318,8 @@ var UbjsonTestSuiteCore = (function (core) {
                         semantics[i] |= Semantics.LastArrayItemFlag;
                         if (moveNextItem(scope)) {
                             semantics[i] |= Semantics.LastContainerItemFlag;
-                            nesting.pop();
+                            if (!nestingPop(nesting, Types.ArrayBegin))
+                                return semantics;
                         }
                         clearContext(context);
                     }
@@ -336,7 +345,8 @@ var UbjsonTestSuiteCore = (function (core) {
                                 currentSemantic = Semantics.Key;
                                 if (moveNextItem(scope)) {
                                     semantics[i] |= Semantics.LastContainerItemFlag;
-                                    nesting.pop();
+                                    if (!nestingPop(nesting, Types.ObjectBegin))
+                                        return semantics;
                                 }
                             }
                             break;
