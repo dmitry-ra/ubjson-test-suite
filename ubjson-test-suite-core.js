@@ -117,20 +117,30 @@ var UbjsonTestSuiteCore = (function (core) {
         return text.replace(/\\]/g, ']').replace(/\\\[/g, '[').replace(/\\\\/g, '\\');
     }
 
-    function parseBlockValue(type, value) {
+    function parseBlockValueToDataItem(type, value) {
         switch (type) {
             case Types.Int8:
             case Types.UInt8:
             case Types.Int16:
             case Types.Int32:
             case Types.Int64:
-                return parseInt(value, 10);
+                return new DataItem(type, parseInt(value, 10));
 
             case Types.Float32:
             case Types.Float64:
-                return parseFloat(value);
+                return new DataItem(type, parseFloat(value));
+
+            case Types.Char:
+                var item = new DataItem(type, value.charCodeAt(0));
+                item.displayValue = value[0];
+                return item;
+
+            case Types.String:
+                var item = new DataItem(type, utf8encode(value));
+                item.displayValue = value;
+                return item;
         }
-        return value;
+        return new DataItem(type, value);
     }
 
 //------------------------------------------------------------------------------
@@ -781,8 +791,7 @@ var UbjsonTestSuiteCore = (function (core) {
                 } else if (trimmed.length > 1 && trimmed[1] == ':') {
                     var type = trimmed[0];
                     var value = data.replace(/^\s+/, '').substring(2);
-                    value = parseBlockValue(type, value);
-                    item = new DataItem(type, value);
+                    item = parseBlockValueToDataItem(type, value);
                 } else {
                     throw new Error('Unknown block');
                 }
