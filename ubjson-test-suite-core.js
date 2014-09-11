@@ -41,13 +41,16 @@ var UbjsonTestSuiteCore = (function (core) {
 
     var Semantics = {
         Unknown: 0,
-        Markup: 1,
-        Key: 2,
-        Value: 3,
-        ArrayItem: 4,
-        UnknownType: 5,
+        UnknownType: 1,
+        Markup: 2,
+        Key: 3,
+        Value: 4,
+        ArrayItem: 5,
+        ContainerParameter: 6,
         LowValuesMask: 0xFF,
-        LastArrayItemFlag: 0x100
+        LastArrayItemFlag: 0x100,
+        LastContainerParameterFlag: 0x200,
+        LastContainerItemFlag: 0x400
     };
 
 //------------------------------------------------------------------------------
@@ -137,12 +140,7 @@ var UbjsonTestSuiteCore = (function (core) {
 
     BlockItem.prototype.displayValue = null;
 
-    BlockItem.prototype.toString = function() {
-        return 'semantic: ' + this.semantic + ', type: ' + this.type;
-    }
-
-    function DataItem(semantic, type, value) {
-        this.semantic = semantic;
+    function DataItem(type, value) {
         this.type = type;
         this.value = value;
     }
@@ -150,8 +148,7 @@ var UbjsonTestSuiteCore = (function (core) {
     DataItem.prototype = new BlockItem();
     DataItem.prototype.constructor = DataItem;
 
-    function TagItem(semantic, type) {
-        this.semantic = semantic;
+    function TagItem(type) {
         this.type = type;
     }
 
@@ -176,8 +173,10 @@ var UbjsonTestSuiteCore = (function (core) {
             case Types.Int64:
             case Types.Float32:
             case Types.Float64:
+            case Types.Type:
                 return 2;
 
+            case Types.Count:
             case Types.String:
             case Types.HighNumber:
                 return 3;
@@ -194,89 +193,174 @@ var UbjsonTestSuiteCore = (function (core) {
         return false;
     }
 
-    function moveNextRecord(block, context) {
+    function clearContext(context) {
+        context.type = '';
+        context.rest = 0;
+    }
+
+    function moveNextItem(scope) {
+        if (scope.containerCounter > 0) {
+            scope.containerCounter--;
+            return scope.containerCounter === 0;
+        }
+        return false;
+    }
+
+    function moveNextRecord(block, context, omitType) {
+        omitType = !!omitType;
         if (context.type == '' || context.rest == 1) {
-            if (block instanceof DataItem && isOptionalPayload(context.type) && typeof(block.value) == 'number') {
+            //first or last block of record
+            if (context.rest == 1 && block instanceof DataItem && isOptionalPayload(context.type) && typeof(block.value) == 'number') {
+                //length of the record with optional payload (hold the rest value of 1)
                 return block.value === 0;
             }
-            var isEnd = (context.type != '');
-            context.type = block.type;
-            context.rest = getTypeMinLength(block.type) - 1;
-            return isEnd || context.rest == 0;
+            var isLastBlock = (context.type != '');
+            if (!isLastBlock && (block instanceof TagItem || omitType)) {
+                context.type = block.type;
+                context.rest = getTypeMinLength(block.type) - 1;
+                if (omitType && context.rest - 1 >= 0) {
+                    context.rest--;
+                }
+                isLastBlock = (context.rest == 0);
+            }
+            return isLastBlock;
         }
         context.rest--;
         return false;
     }
 
+    function nestingPop(nesting, expectedScopeType) {
+        var scope = nesting.pop();
+        if (scope) {
+            return scope.scopeType === expectedScopeType;
+        }
+        return false;
+    }
+
     function semanticMarkup(items) {
         var markup = Types.ArrayBegin + Types.ArrayEnd + Types.ObjectBegin + Types.ObjectEnd;
+        var parameters = Types.Type + Types.Count;
         var known = '';
         for (var k in Types) {
             known += Types[k];
         }
         var nesting = [];
-        var semantics = Semantics.Unknown;
+        var currentSemantic = Semantics.Unknown;
         var context = { type: '', rest: 0 };
         var count = items.length;
+        var semantics = new Array(count);
+        for (var i = 0; i < count; i++) {
+            semantics[i] = Semantics.Unknown;
+        }
         for (var i = 0; i < count; i++) {
             var block = items[i];
             if (known.indexOf(block.type) == -1) {
-                block.semantic = Semantics.UnknownType;
+                currentSemantic = Semantics.UnknownType;
+                semantics[i] = Semantics.UnknownType;
+            } else if (parameters.indexOf(block.type) >= 0) {
+                currentSemantic = Semantics.ContainerParameter;
+                semantics[i] = Semantics.ContainerParameter;
+                clearContext(context);
+                moveNextRecord(block, context);
             } else if (markup.indexOf(block.type) >= 0) {
-                block.semantic = Semantics.Markup;
-                context.type = '';
+                if (context.type == Types.Type && context.rest == 1) {
+                    throw new Error('Optimized nested containers not supported');
+                }
+                currentSemantic = Semantics.Markup;
+                semantics[i] = Semantics.Markup;
+                clearContext(context);
                 switch(block.type) {
                     case Types.ArrayBegin:
                     case Types.ObjectBegin:
-                        nesting.push(block.type);
+                        var scope = { scopeType: block.type };
+                        nesting.push(scope);
                         break;
                     case Types.ArrayEnd:
-                        if (nesting.pop() != Types.ArrayBegin)
-                            return;
+                        if (!nestingPop(nesting, Types.ArrayBegin))
+                            return semantics;
+                        break;
                     case Types.ObjectEnd:
-                        if (nesting.pop() != Types.ObjectBegin)
-                            return;
+                        if (!nestingPop(nesting, Types.ObjectBegin))
+                            return semantics;
+                        break;
                 }
             } else {
-                var scope = nesting[nesting.length - 1] || '';
-                if (scope == Types.ArrayBegin) {
-                    semantics = Semantics.ArrayItem;
-                    block.semantic = semantics;
+                var scope = nesting[nesting.length - 1] || { scopeType: '' };
+                if (currentSemantic == Semantics.ContainerParameter) {
+                    semantics[i] = Semantics.ContainerParameter;
+                    if (context.type == Types.Count && context.rest == 2) {
+                        scope.containerSizeNumberType = block.type;
+                    }
                     if (moveNextRecord(block, context)) {
-                        block.semantic |= Semantics.LastArrayItemFlag;
+                        if (context.type == Types.Count) {
+                            scope.containerSize = block.value;
+                            semantics[i] |= Semantics.LastContainerParameterFlag;
+                            if (scope.containerSize >= 0) {
+                                if (scope.containerSize == 0) {
+                                    semantics[i] |= Semantics.LastContainerItemFlag;
+                                } else {
+                                    scope.containerCounter = scope.containerSize;
+                                }
+                            }
+                        } else {
+                            scope.containerType = block.type;
+                        }
+                        currentSemantic = Semantics.Unknown;
+                        clearContext(context);
+                    }
+                    continue;
+                }
+                var omitType = !!scope.containerType;
+                if (scope.scopeType == Types.ArrayBegin) {
+                    currentSemantic = Semantics.ArrayItem;
+                    semantics[i] = Semantics.ArrayItem;
+                    if (moveNextRecord(block, context, omitType)) {
+                        semantics[i] |= Semantics.LastArrayItemFlag;
+                        if (moveNextItem(scope)) {
+                            semantics[i] |= Semantics.LastContainerItemFlag;
+                            if (!nestingPop(nesting, Types.ArrayBegin))
+                                return semantics;
+                        }
+                        clearContext(context);
                     }
                 } else {
-                    switch (semantics) {
+                    switch (currentSemantic) {
+                        case Semantics.Markup:
                         case Semantics.ArrayItem:
-                            semantics = Semantics.Key;
-                            block.semantic = semantics;
+                            currentSemantic = Semantics.Key;
+                            semantics[i] = Semantics.Key;
                             break;
                         case Semantics.Key:
                         case Semantics.Unknown:
-                            block.semantic = Semantics.Key;
+                            currentSemantic = Semantics.Key;
+                            semantics[i] = Semantics.Key;
                             if (block.type == Types.String && block instanceof DataItem) {
-                                semantics = Semantics.Value;
-                                context.type = '';
+                                currentSemantic = Semantics.Value;
+                                clearContext(context);
                             }
                             break;
-
                         case Semantics.Value:
-                            block.semantic = semantics;
-                            if (moveNextRecord(block, context)) {
-                                semantics = Semantics.Key;
+                            semantics[i] = currentSemantic;
+                            if (moveNextRecord(block, context, omitType)) {
+                                currentSemantic = Semantics.Key;
+                                if (moveNextItem(scope)) {
+                                    semantics[i] |= Semantics.LastContainerItemFlag;
+                                    if (!nestingPop(nesting, Types.ObjectBegin))
+                                        return semantics;
+                                }
                             }
                             break;
                     }
                 }
             }
         }
+        return semantics;
     }
 
 //------------------------------------------------------------------------------
 
     function ObjectSerializer() {
         this.items = [];
-        this.currentSemantic = Semantics.Markup;
         var buffer = new ArrayBuffer(4);
         this.floatDataView = new DataView(buffer);
     }
@@ -319,31 +403,23 @@ var UbjsonTestSuiteCore = (function (core) {
     }
 
     ObjectSerializer.prototype.serializeArray = function(array) {
-        this.setCurrentSemantic(Semantics.Markup);
         this.addTagItem(Types.ArrayBegin);
         var count = array.length;
         for(var i = 0; i < count; i++) {
-            this.setCurrentSemantic(Semantics.ArrayItem);
             this.serializeEntity(array[i]);
-            this.items[this.items.length - 1].semantic |= Semantics.LastArrayItemFlag;
         }
-        this.setCurrentSemantic(Semantics.Markup);
         this.addTagItem(Types.ArrayEnd);
     }
 
     ObjectSerializer.prototype.serializeObject = function(object) {
-        this.setCurrentSemantic(Semantics.Markup);
         this.addTagItem(Types.ObjectBegin);
         var keys = Object.keys(object);
         var count = keys.length;
         for(var i = 0; i < count; i++) {
             var key = keys[i];
-            this.setCurrentSemantic(Semantics.Key);
             this.serializeString(key, false, false, false);
-            this.setCurrentSemantic(Semantics.Value);
             this.serializeEntity(object[key]);
         }
-        this.setCurrentSemantic(Semantics.Markup);
         this.addTagItem(Types.ObjectEnd);
     }
 
@@ -392,19 +468,15 @@ var UbjsonTestSuiteCore = (function (core) {
     }
 
     ObjectSerializer.prototype.addTagItem = function(type) {
-        var item = new TagItem(this.currentSemantic, type);
+        var item = new TagItem(type);
         this.items.push(item);
         return item;
     }
 
     ObjectSerializer.prototype.addDataItem = function(type, value) {
-        var item = new DataItem(this.currentSemantic, type, value);
+        var item = new DataItem(type, value);
         this.items.push(item);
         return item;
-    }
-
-    ObjectSerializer.prototype.setCurrentSemantic = function(semantic) {
-        this.currentSemantic = semantic;
     }
 
 //------------------------------------------------------------------------------
@@ -415,11 +487,12 @@ var UbjsonTestSuiteCore = (function (core) {
         this.highlight = true;
         this.styles = {
                 unknown: 'color: black',
+                unknownType: 'color: red; text-decoration: underline',
                 markup: 'color: green',
                 key: 'color: blue',
                 value: 'color: red',
                 arrayItem: 'color: orange',
-                unknownType: 'color: red; text-decoration: underline'
+                containerParameter: 'color: green; text-decoration: underline'
             };
     }
 
@@ -430,74 +503,86 @@ var UbjsonTestSuiteCore = (function (core) {
         var indent = '';
         var nestingLevel = 0;
         var prevBlock = null;
+        var prevSemantic = Semantics.Unknown;
+        var semantics = semanticMarkup(items);
         var count = items.length;
         var startNewLine = false;
         for (var i = 0; i < count; i++) {
             var block = items[i];
+            var semantic = semantics[i];
             var id = this.BlockIdPrefix + i;
-            if (block instanceof TagItem) {
-                if (block.type == Types.ObjectEnd || block.type == Types.ArrayEnd) {
-                    indent = this.getIndent(--nestingLevel);
-                    startNewLine = prevBlock != null && prevBlock.type != Types.ObjectBegin && prevBlock.type != Types.ArrayBegin;
-                }
-                if (prevBlock != null) {
-                    if ((prevBlock.semantic & Semantics.LastArrayItemFlag) == Semantics.LastArrayItemFlag) {
-                        startNewLine = true;
-                    }
-                    var prevBlockSemantic = prevBlock.semantic & Semantics.LowValuesMask;
-                    var blockSemantic = block.semantic & Semantics.LowValuesMask;
-                    if (prevBlockSemantic == Semantics.Value && blockSemantic == Semantics.Key) {
-                        startNewLine = true;
-                    }
-                    if (prevBlock.type == Types.ObjectEnd || prevBlock.type == Types.ArrayEnd) {
-                        startNewLine = true;
-                    }
-                }
-                if (startNewLine) {
-                    text += '\n' + indent;
-                    startNewLine = false;
-                }
-                text += this.renderTagBlock(block, id);
-                if (block.type == Types.ObjectBegin || block.type == Types.ArrayBegin) {
-                    indent = this.getIndent(++nestingLevel);
+            if (block.type == Types.ObjectEnd || block.type == Types.ArrayEnd) {
+                indent = this.getIndent(--nestingLevel);
+                startNewLine = prevBlock != null && prevBlock.type != Types.ObjectBegin && prevBlock.type != Types.ArrayBegin;
+            }
+            if (prevBlock != null) {
+                if ((prevSemantic & Semantics.LastArrayItemFlag) == Semantics.LastArrayItemFlag) {
                     startNewLine = true;
                 }
+                if ((prevSemantic & Semantics.LastContainerParameterFlag) == Semantics.LastContainerParameterFlag) {
+                    startNewLine = true;
+                }
+                var prevBlockSemantic = prevSemantic & Semantics.LowValuesMask;
+                var blockSemantic = semantic & Semantics.LowValuesMask;
+                if (prevBlockSemantic == Semantics.Value && blockSemantic == Semantics.Key) {
+                    startNewLine = true;
+                }
+                if (prevBlock.type == Types.ObjectEnd || prevBlock.type == Types.ArrayEnd) {
+                    startNewLine = true;
+                }
+            }
+            if (startNewLine) {
+                text += '\n' + indent;
+                startNewLine = false;
+            }
+            if (block instanceof TagItem) {
+                text += this.renderTagBlock(block, id, semantic);
             } else {
-                text += this.renderDataBlock(block, id);
+                text += this.renderDataBlock(block, id, semantic);
+            }
+            if ((semantic & Semantics.LastContainerItemFlag) == Semantics.LastContainerItemFlag) {
+                indent = this.getIndent(--nestingLevel);
+            }
+            if (block.type == Types.ObjectBegin || block.type == Types.ArrayBegin) {
+                indent = this.getIndent(++nestingLevel);
+                startNewLine = true;
             }
             prevBlock = block;
+            prevSemantic = semantic;
         }
         return text;
     }
 
-    BlocksTextRenderer.prototype.renderTagBlock = function(block, id) {
+    BlocksTextRenderer.prototype.renderTagBlock = function(block, id, semantic) {
         var type = this.formalized ? escapeBlockText(block.type) : block.type;
         if (this.highlight) {
-            var style = this.getStyle(block);
+            var style = this.getStyle(semantic);
             return '<span id="' + id + '" style="' + style + '">[' + type + ']</span>';
         } else {
             return '[' + type + ']';
         }
     }
 
-    BlocksTextRenderer.prototype.renderDataBlock = function(block, id) {
+    BlocksTextRenderer.prototype.renderDataBlock = function(block, id, semantic) {
         var value = (block.displayValue != null) ? block.displayValue : block.value;
         if (this.formalized) {
             value = block.type + ':' + escapeBlockText(value.toString());
         }
         if (this.highlight) {
-            var style = this.getStyle(block);
+            var style = this.getStyle(semantic);
             return '<span id="' + id + '" style="' + style + '">[' + value + ']</span>';
         } else {
             return '[' + value + ']';
         }
     }
 
-    BlocksTextRenderer.prototype.getStyle = function(block) {
-        var semantic = (block.semantic & Semantics.LowValuesMask);
+    BlocksTextRenderer.prototype.getStyle = function(semantic) {
+        semantic = (semantic & Semantics.LowValuesMask);
         switch (semantic) {
             case Semantics.Unknown:
                 return this.styles.unknown;
+            case Semantics.UnknownType:
+                return this.styles.unknownType;
             case Semantics.Markup:
                 return this.styles.markup;
             case Semantics.Key:
@@ -506,8 +591,8 @@ var UbjsonTestSuiteCore = (function (core) {
                 return this.styles.value;
             case Semantics.ArrayItem:
                 return this.styles.arrayItem;
-            case Semantics.UnknownType:
-                return this.styles.unknownType;
+            case Semantics.ContainerParameter:
+                return this.styles.containerParameter;
             default:
                 throw new Error('Unknown semantic code "' + semantic + '"');
         }
@@ -692,12 +777,12 @@ var UbjsonTestSuiteCore = (function (core) {
                 var trimmed = unescapeBlockText(data).trim();
                 var item;
                 if (trimmed.length == 1) {
-                    item = new TagItem(Semantics.Unknown, trimmed[0]);
+                    item = new TagItem(trimmed[0]);
                 } else if (trimmed.length > 1 && trimmed[1] == ':') {
                     var type = trimmed[0];
                     var value = data.replace(/^\s+/, '').substring(2);
                     value = parseBlockValue(type, value);
-                    item = new DataItem(Semantics.Unknown, type, value);
+                    item = new DataItem(type, value);
                 } else {
                     throw new Error('Unknown block');
                 }
@@ -706,7 +791,6 @@ var UbjsonTestSuiteCore = (function (core) {
             }
             escape = (ch == '\\' && !escape);
         }
-        semanticMarkup(items);
         return items;
     }
 

@@ -77,25 +77,15 @@
             var blocksMap = [];
             function updateData(blocksText)
             {
-                var parseResult = {};
                 try {
                     var parser = new UbjsonTestSuiteCore.BlocksTextParser();
-                    parseResult.items = parser.parse(blocksText);
-                    parseResult.success = true;
-                } catch(error) {
-                    parseResult.success = false;
-                    parseResult.error = error;
-                }
-
-                if (parseResult.success) {
-                    setOK('blocks-status', true);
-                    document.getElementById('blocks-status').innerHTML = 'OK';
+                    var items = parser.parse(blocksText);
 
                     var highlight = document.getElementById('checkbox-highlight').checked;
                     var renderer = new UbjsonTestSuiteCore.BlocksTextRenderer();
                     renderer.highlight = highlight;
                     renderer.formalized = true;
-                    document.getElementById('block-disp').innerHTML = renderer.render(parseResult.items);
+                    document.getElementById('block-disp').innerHTML = renderer.render(items);
 
                     blocksMap = null;
                     var writer = new UbjsonTestSuiteCore.BinaryWriter();
@@ -105,7 +95,7 @@
                             blocksMap.push({ id: id, start: offset });
                         }
                     }
-                    writer.writeBlocks(parseResult.items);
+                    writer.writeBlocks(items);
 
                     var hexRenderer = new UbjsonTestSuiteCore.HexRenderer();
                     var hex = hexRenderer.renderBinaryString(writer.binary, blocksMap);
@@ -115,11 +105,15 @@
                     dl.href = 'data:application/ubjson;base64,' + btoa(writer.binary);
                     dl.download = 'data_' + (new Date()).toISOString().replace(/:/g, '_') + '.ubj';
                     dl.innerHTML = 'Download binary (' + writer.binary.length + ' bytes)';
-                } else {
+
+                    setOK('blocks-status', true);
+                    document.getElementById('blocks-status').innerHTML = 'OK';
+                } catch(error) {
                     setOK('blocks-status', false);
-                    document.getElementById('blocks-status').innerHTML = parseResult.error;
+                    document.getElementById('blocks-status').innerHTML = error;
                 }
             }
+
             var inp = document.getElementById('txt-input');
             inp.onkeyup = onTextChange;
             inp.onchange = onTextChange;
@@ -185,12 +179,18 @@
 
             window.onload = function() {
                 var hash = decodeURIComponent(window.location.href.split('#')[1] || '');
+                var reformat = false;
                 if (hash) {
                     document.getElementById('txt-input').value = hash;
+                    reformat = true;
                 } else {
                     document.getElementById('txt-input').value = '[{]\n    [i][i:6][S:answer][i][i:42]\n[}]';
                 }
                 forcedRefresh();
+                if (reformat) {
+                    var disp = document.getElementById('block-disp');
+                    document.getElementById('txt-input').value = disp.innerText || disp.textContent;
+                }
             }
         </script>
     </body>
