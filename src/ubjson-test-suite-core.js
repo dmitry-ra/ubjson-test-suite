@@ -134,6 +134,11 @@ var UbjsonTestSuiteCore = (function (core) {
                 var item = new DataItem(type, value.charCodeAt(0));
                 item.displayValue = value[0];
                 return item;
+
+            case Types.String:
+                var item = new DataItem(type, utf8encode(value));
+                item.displayValue = value;
+                return item;
         }
         return new DataItem(type, value);
     }
