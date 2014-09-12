@@ -118,19 +118,33 @@ var UbjsonTestSuiteCore = (function (core) {
     }
 
     function parseBlockValueToDataItem(type, value) {
+        if (!value || value.length <= 0) {
+            throw new Error('Empty value');
+        }
         switch (type) {
             case Types.Int8:
             case Types.UInt8:
             case Types.Int16:
             case Types.Int32:
             case Types.Int64:
-                return new DataItem(type, parseInt(value, 10));
+                var number = parseInt(value, 10);
+                if (!isFinite(number) || !isInteger(number)) {
+                    throw new Error('Invalid integer value');
+                }
+                return new DataItem(type, number);
 
             case Types.Float32:
             case Types.Float64:
-                return new DataItem(type, parseFloat(value));
+                var number = parseFloat(value);
+                if (!isFinite(number)) {
+                    throw new Error('Invalid float value');
+                }
+                return new DataItem(type, number);
 
             case Types.Char:
+                if (value.length > 1) {
+                    throw new Error('Char value must be a single character');
+                }
                 var item = new DataItem(type, value.charCodeAt(0));
                 item.displayValue = value[0];
                 return item;
